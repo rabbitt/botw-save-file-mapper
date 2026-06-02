@@ -1,11 +1,14 @@
 """Per-entity proxy and collection subclasses for each save section.
 
 Each section has:
-  - A *Proxy class: wraps a single entity container with type-correct field access.
-  - A *Collection class: wraps the full section container and yields proxies.
+  - A *Proxy class: wraps a single entity with type-correct field access.
+  - A *Collection class: yields proxies for every entity in the section.
 
-Horse string fields (name, type, saddle, reins, mane) use stride-8 encoding not
-yet implemented and raise NotImplementedError on get and set.
+All field access routes through the shared flat FLAT_LAYOUT container;
+no nested per-entity sub-containers exist.
+
+Horse string fields (name, type, saddle, reins, mane) use stride-8 encoding
+not yet implemented and raise NotImplementedError on get and set.
 """
 
 from __future__ import annotations
@@ -13,188 +16,128 @@ from __future__ import annotations
 import construct as cs
 
 from .base import EntityProxy, EntityCollection
-from ._layout import (
-    SHRINES_NAMES, SHRINE_SIMPLE, SHRINE_EXTRA_KEYS,
-    TOWERS_NAMES,
-    MEMORIES_NAMES,
-    DIVINEBEASTS_NAMES,
-    FAIRYFOUNTAINS_NAMES,
-    ANCIENTTECHLABS_NAMES,
-    CUTSCENES_NAMES,
-    HORSES_NAMES,
-    NPCS_NAMES,
-    RUNES_NAMES,
-    SHEIKAHSLATE_NAMES,
-    QUICKTIPS_NAMES,
-    SIDEQUESTS_NAMES,
-    MAINQUESTS_NAMES,
-    CHAMPIONPOWERS_NAMES,
-    TOWNS_NAMES,
-    MASTERSWORD_NAMES,
-)
-
-
-# ---------------------------------------------------------------------------
-# FlagProxy — base for sections where all non-integer fields are boolean
-# ---------------------------------------------------------------------------
-
-class FlagProxy(EntityProxy):
-    """Proxy where non-integer int fields are bool-converted (uint32 != 0 → True)."""
-
-    _integer_fields: frozenset[str] = frozenset()
-
-    def __getattr__(self, name: str):
-        val = super().__getattr__(name)
-        if isinstance(val, int) and name not in type(self)._integer_fields:
-            return bool(val)
-        return val
+from ._layout import NAMES, SHRINE_SIMPLE, SHRINE_EXTRA_KEYS
 
 
 # ---------------------------------------------------------------------------
 # Shrines
 # ---------------------------------------------------------------------------
 
-class ShrineProxy(FlagProxy):
-    """Proxy for a single shrine entity. All fields are boolean."""
+class ShrineProxy(EntityProxy):
+    """Proxy for a single shrine entity. All fields are boolean flags."""
 
     @property
     def is_simple(self) -> bool:
-        """True if this shrine has only the standard {active, complete, found, pedestal} fields."""
-        c = object.__getattribute__(self, '_c')
-        # We can't know the name directly, but we check fields against SHRINE_SIMPLE
-        # Use the container's keys minus underscore-prefixed ones
-        fields = frozenset(k for k in c.keys() if not k.startswith('_'))
+        """True when the shrine has only the standard {active, complete, found, pedestal} fields."""
+        flds = object.__getattribute__(self, '_flds')
         standard = frozenset({"active", "complete", "found", "pedestal"})
-        return (fields - standard) == frozenset()
+        return frozenset(flds) <= standard
 
     @property
     def extra_keys(self) -> frozenset[str]:
-        """Extra field names beyond the standard shrine set."""
-        c = object.__getattribute__(self, '_c')
-        fields = frozenset(k for k in c.keys() if not k.startswith('_'))
+        """Field names beyond the standard shrine set."""
+        flds = object.__getattribute__(self, '_flds')
         standard = frozenset({"active", "complete", "found", "pedestal"})
-        return fields - standard
+        return frozenset(flds) - standard
 
 
 class ShrineCollection(EntityCollection):
-    """Collection of shrine entities."""
-
     proxy_class = ShrineProxy
-    _section_names: list[str] = SHRINES_NAMES
+    _section_names: list[str] = NAMES["shrines"]
 
     def simple(self):
         """Yield (name, proxy) for shrines with only standard flags."""
-        c = object.__getattribute__(self, '_c')
+        info = object.__getattribute__(self, '_info')
+        flat = object.__getattribute__(self, '_flat')
         for name in SHRINE_SIMPLE:
-            if name in c:
-                yield name, ShrineProxy(c[name])
+            if name in info:
+                yield name, ShrineProxy(flat, info[name])
 
     def with_extras(self):
         """Yield (name, proxy, extra_keys) for shrines with non-standard flags."""
-        c = object.__getattribute__(self, '_c')
+        info = object.__getattribute__(self, '_info')
+        flat = object.__getattribute__(self, '_flat')
         for name, extra_keys in SHRINE_EXTRA_KEYS.items():
-            if name in c:
-                yield name, ShrineProxy(c[name]), extra_keys
+            if name in info:
+                yield name, ShrineProxy(flat, info[name]), extra_keys
 
 
 # ---------------------------------------------------------------------------
 # Towers
 # ---------------------------------------------------------------------------
 
-class TowerProxy(FlagProxy):
-    """Proxy for a single tower entity. All fields are boolean."""
+class TowerProxy(EntityProxy):
     pass
 
 
 class TowerCollection(EntityCollection):
-    """Collection of tower entities."""
-
     proxy_class = TowerProxy
-    _section_names: list[str] = TOWERS_NAMES
+    _section_names: list[str] = NAMES["towers"]
 
 
 # ---------------------------------------------------------------------------
 # Memories
 # ---------------------------------------------------------------------------
 
-class MemoryProxy(FlagProxy):
-    """Proxy for a single memory entity."""
+class MemoryProxy(EntityProxy):
     pass
 
 
 class MemoryCollection(EntityCollection):
-    """Collection of memory entities."""
-
     proxy_class = MemoryProxy
-    _section_names: list[str] = MEMORIES_NAMES
+    _section_names: list[str] = NAMES["memories"]
 
 
 # ---------------------------------------------------------------------------
 # Divine Beasts
 # ---------------------------------------------------------------------------
 
-class DivineBeastProxy(FlagProxy):
-    """Proxy for a single divine beast entity.
-
-    terminalsremaining is an integer count, not a boolean.
-    """
-
-    _integer_fields: frozenset[str] = frozenset({"terminalsremaining"})
+class DivineBeastProxy(EntityProxy):
+    pass
 
 
 class DivineBeastCollection(EntityCollection):
-    """Collection of divine beast entities."""
-
     proxy_class = DivineBeastProxy
-    _section_names: list[str] = DIVINEBEASTS_NAMES
+    _section_names: list[str] = NAMES["divinebeasts"]
 
 
 # ---------------------------------------------------------------------------
 # Fairy Fountains
 # ---------------------------------------------------------------------------
 
-class FairyFountainProxy(FlagProxy):
-    """Proxy for a single fairy fountain entity."""
+class FairyFountainProxy(EntityProxy):
     pass
 
 
 class FairyFountainCollection(EntityCollection):
-    """Collection of fairy fountain entities."""
-
     proxy_class = FairyFountainProxy
-    _section_names: list[str] = FAIRYFOUNTAINS_NAMES
+    _section_names: list[str] = NAMES["fairyfountains"]
 
 
 # ---------------------------------------------------------------------------
 # Ancient Tech Labs
 # ---------------------------------------------------------------------------
 
-class AncientTechLabProxy(FlagProxy):
-    """Proxy for a single ancient tech lab entity."""
+class AncientTechLabProxy(EntityProxy):
     pass
 
 
 class AncientTechLabCollection(EntityCollection):
-    """Collection of ancient tech lab entities."""
-
     proxy_class = AncientTechLabProxy
-    _section_names: list[str] = ANCIENTTECHLABS_NAMES
+    _section_names: list[str] = NAMES["ancienttechlabs"]
 
 
 # ---------------------------------------------------------------------------
 # Cutscenes
 # ---------------------------------------------------------------------------
 
-class CutsceneProxy(FlagProxy):
-    """Proxy for a single cutscene entity."""
+class CutsceneProxy(EntityProxy):
     pass
 
 
 class CutsceneCollection(EntityCollection):
-    """Collection of cutscene entities."""
-
     proxy_class = CutsceneProxy
-    _section_names: list[str] = CUTSCENES_NAMES
+    _section_names: list[str] = NAMES["cutscenes"]
 
 
 # ---------------------------------------------------------------------------
@@ -213,7 +156,7 @@ class HorseProxy(EntityProxy):
     mapped in the layout and raise NotImplementedError on access.
     """
 
-    _float_fields: frozenset[str] = frozenset({"bond", "position"})
+    _float_fields: frozenset[str] = frozenset({"bond"})
 
     def __getattr__(self, name: str):
         if name in _HORSE_STRING_FIELDS:
@@ -267,115 +210,86 @@ class HorseProxy(EntityProxy):
 
 
 class HorseCollection(EntityCollection):
-    """Collection of horse slot entities."""
-
     proxy_class = HorseProxy
-    _section_names: list[str] = HORSES_NAMES
+    _section_names: list[str] = NAMES["horses"]
 
 
 # ---------------------------------------------------------------------------
 # NPCs
 # ---------------------------------------------------------------------------
 
-class NpcProxy(FlagProxy):
-    """Proxy for a single NPC entity."""
+class NpcProxy(EntityProxy):
     pass
 
 
 class NpcCollection(EntityCollection):
-    """Collection of NPC entities."""
-
     proxy_class = NpcProxy
-    _section_names: list[str] = NPCS_NAMES
+    _section_names: list[str] = NAMES["npcs"]
 
 
 # ---------------------------------------------------------------------------
 # Runes
 # ---------------------------------------------------------------------------
 
-class RuneProxy(FlagProxy):
-    """Proxy for a single rune entity."""
+class RuneProxy(EntityProxy):
     pass
 
 
 class RuneCollection(EntityCollection):
-    """Collection of rune entities."""
-
     proxy_class = RuneProxy
-    _section_names: list[str] = RUNES_NAMES
+    _section_names: list[str] = NAMES["runes"]
 
 
 # ---------------------------------------------------------------------------
 # Sheikah Slate
 # ---------------------------------------------------------------------------
 
-class SheikahSlateProxy(FlagProxy):
-    """Proxy for a single Sheikah Slate feature entity."""
+class SheikahSlateProxy(EntityProxy):
     pass
 
 
 class SheikahSlateCollection(EntityCollection):
-    """Collection of Sheikah Slate feature entities."""
-
     proxy_class = SheikahSlateProxy
-    _section_names: list[str] = SHEIKAHSLATE_NAMES
+    _section_names: list[str] = NAMES["sheikahslate"]
 
 
 # ---------------------------------------------------------------------------
 # Quick Tips
 # ---------------------------------------------------------------------------
 
-class QuickTipProxy(FlagProxy):
-    """Proxy for a single quick tip entity."""
+class QuickTipProxy(EntityProxy):
     pass
 
 
 class QuickTipCollection(EntityCollection):
-    """Collection of quick tip entities."""
-
     proxy_class = QuickTipProxy
-    _section_names: list[str] = QUICKTIPS_NAMES
+    _section_names: list[str] = NAMES["quicktips"]
 
 
 # ---------------------------------------------------------------------------
 # Side Quests
 # ---------------------------------------------------------------------------
 
-class SideQuestProxy(FlagProxy):
-    """Proxy for a single side quest entity."""
+class SideQuestProxy(EntityProxy):
     pass
 
 
 class SideQuestCollection(EntityCollection):
-    """Collection of side quest entities."""
-
     proxy_class = SideQuestProxy
-    _section_names: list[str] = SIDEQUESTS_NAMES
+    _section_names: list[str] = NAMES["sidequests"]
 
 
 # ---------------------------------------------------------------------------
 # Main Quests
 # ---------------------------------------------------------------------------
 
-class MainQuestProxy(FlagProxy):
-    """Proxy for a single main quest entity.
-
-    memoriesremaining and selected are integer counts, not booleans.
-    findthenewmonuments is also an integer counter.
-    """
-
-    _integer_fields: frozenset[str] = frozenset({
-        "memoriesremaining",
-        "selected",
-        "findthenewmonuments",
-    })
+class MainQuestProxy(EntityProxy):
+    pass
 
 
 class MainQuestCollection(EntityCollection):
-    """Collection of main quest entities."""
-
     proxy_class = MainQuestProxy
-    _section_names: list[str] = MAINQUESTS_NAMES
+    _section_names: list[str] = NAMES["mainquests"]
 
 
 # ---------------------------------------------------------------------------
@@ -385,56 +299,38 @@ class MainQuestCollection(EntityCollection):
 class ChampionPowerProxy(EntityProxy):
     """Proxy for a single champion power entity.
 
-    readytimer is a float32.
-    uses is an integer count.
-    plus is boolean.
+    readytimer is a float32; uses is an integer count; plus is boolean.
     """
 
     _float_fields: frozenset[str] = frozenset({"readytimer"})
 
-    def __getattr__(self, name: str):
-        val = super().__getattr__(name)
-        # bool-convert boolean fields (plus)
-        if isinstance(val, int) and name not in ("uses",):
-            # readytimer is already decoded as float by EntityProxy
-            return bool(val)
-        return val
-
 
 class ChampionPowerCollection(EntityCollection):
-    """Collection of champion power entities."""
-
     proxy_class = ChampionPowerProxy
-    _section_names: list[str] = CHAMPIONPOWERS_NAMES
+    _section_names: list[str] = NAMES["championpowers"]
 
 
 # ---------------------------------------------------------------------------
 # Towns
 # ---------------------------------------------------------------------------
 
-class TownProxy(FlagProxy):
-    """Proxy for a single town entity."""
+class TownProxy(EntityProxy):
     pass
 
 
 class TownCollection(EntityCollection):
-    """Collection of town entities."""
-
     proxy_class = TownProxy
-    _section_names: list[str] = TOWNS_NAMES
+    _section_names: list[str] = NAMES["towns"]
 
 
 # ---------------------------------------------------------------------------
 # Master Sword
 # ---------------------------------------------------------------------------
 
-class MasterSwordProxy(FlagProxy):
-    """Proxy for a single master sword state entity."""
+class MasterSwordProxy(EntityProxy):
     pass
 
 
 class MasterSwordCollection(EntityCollection):
-    """Collection of master sword state entities."""
-
     proxy_class = MasterSwordProxy
-    _section_names: list[str] = MASTERSWORD_NAMES
+    _section_names: list[str] = NAMES["mastersword"]

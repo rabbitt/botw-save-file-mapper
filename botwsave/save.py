@@ -19,9 +19,10 @@ from .effectmap import EffectMap, DependencyGraph, DependencyResult
 from .codecs import (
     encode_time_of_day, decode_time_of_day,
     encode_hms, decode_hms,
+    bits_to_float, float_to_bits,
 )
 from .inventory import Inventory, read_inventory, write_inventory, inventory_from_dict
-from ._layout import LAYOUTS
+from ._layout import FLAT_LAYOUT, ENTITY_FIELD_INFO
 from .entities import (
     ShrineCollection,
     TowerCollection,
@@ -169,8 +170,10 @@ class SaveFile:
         self._deps = DependencyGraph(self._effectmap)
         self.readonly = readonly or dry_run
         self.dry_run = dry_run
+        # _flat: the single parsed FLAT_LAYOUT container (all flag offsets).
+        self._flat: cs.Container | None = None
+        # _binary: kept only for inventory I/O (array walking needs bytearray).
         self._binary: BinaryFile | None = None
-        self._construct_containers: dict = {}
 
         # Proxy collection attributes (populated in __enter__)
         self.shrines: ShrineCollection | None = None
@@ -192,68 +195,63 @@ class SaveFile:
         self.mastersword: MasterSwordCollection | None = None
 
     def __enter__(self) -> "SaveFile":
+        # Parse flat layout (all flag offsets in one pass via Pointer seeks).
+        with self.path.open('rb') as fh:
+            self._flat = FLAT_LAYOUT.parse_stream(fh)
+
+        # BinaryFile is retained only for inventory reads/writes.
         self._binary = BinaryFile(self.path, self._effectmap, readonly=self.readonly)
         self._binary.__enter__()
 
-        # Parse all LAYOUTS sections via a separate read handle.
-        # (parse_stream uses Pointer seeks so it needs its own file handle.)
-        _parse_fh = self.path.open('rb')
-        try:
-            for section_key, layout in LAYOUTS.items():
-                try:
-                    self._construct_containers[section_key] = layout.parse_stream(_parse_fh)
-                except Exception:
-                    pass  # skip sections that fail to parse (e.g. truncated file)
-        finally:
-            _parse_fh.close()
+        # Wire entity collections — all share the same _flat container.
+        def _info(key: str) -> dict:
+            return ENTITY_FIELD_INFO.get(key, {})
 
-        # Wire up entity collections (handle missing sections gracefully)
-        def _container(key: str) -> cs.Container:
-            return self._construct_containers.get(key, cs.Container())
-
-        self.shrines       = ShrineCollection(_container("shrines"))
-        self.towers        = TowerCollection(_container("towers"))
-        self.memories      = MemoryCollection(_container("memories"))
-        self.divinebeasts  = DivineBeastCollection(_container("divinebeasts"))
-        self.fairyfountains = FairyFountainCollection(_container("fairyfountains"))
-        self.ancienttechlabs = AncientTechLabCollection(_container("ancienttechlabs"))
-        self.cutscenes     = CutsceneCollection(_container("cutscenes"))
-        self.horses        = HorseCollection(_container("horses"))
-        self.npcs          = NpcCollection(_container("npcs"))
-        self.runes_collection   = RuneCollection(_container("runes"))
-        self.sheikahslate_collection = SheikahSlateCollection(_container("sheikahslate"))
-        self.quicktips     = QuickTipCollection(_container("quicktips"))
-        self.sidequests    = SideQuestCollection(_container("sidequests"))
-        self.mainquests    = MainQuestCollection(_container("mainquests"))
-        self.championpowers = ChampionPowerCollection(_container("championpowers"))
-        self.towns         = TownCollection(_container("towns"))
-        self.mastersword   = MasterSwordCollection(_container("mastersword"))
+        self.shrines            = ShrineCollection(self._flat, _info("shrines"))
+        self.towers             = TowerCollection(self._flat, _info("towers"))
+        self.memories           = MemoryCollection(self._flat, _info("memories"))
+        self.divinebeasts       = DivineBeastCollection(self._flat, _info("divinebeasts"))
+        self.fairyfountains     = FairyFountainCollection(self._flat, _info("fairyfountains"))
+        self.ancienttechlabs    = AncientTechLabCollection(self._flat, _info("ancienttechlabs"))
+        self.cutscenes          = CutsceneCollection(self._flat, _info("cutscenes"))
+        self.horses             = HorseCollection(self._flat, _info("horses"))
+        self.npcs               = NpcCollection(self._flat, _info("npcs"))
+        self.runes_collection        = RuneCollection(self._flat, _info("runes"))
+        self.sheikahslate_collection = SheikahSlateCollection(self._flat, _info("sheikahslate"))
+        self.quicktips          = QuickTipCollection(self._flat, _info("quicktips"))
+        self.sidequests         = SideQuestCollection(self._flat, _info("sidequests"))
+        self.mainquests         = MainQuestCollection(self._flat, _info("mainquests"))
+        self.championpowers     = ChampionPowerCollection(self._flat, _info("championpowers"))
+        self.towns              = TownCollection(self._flat, _info("towns"))
+        self.mastersword        = MasterSwordCollection(self._flat, _info("mastersword"))
 
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb) -> None:
+        # Close BinaryFile first (flushes any in-flight inventory writes).
         if self._binary is not None:
             self._binary.__exit__(exc_type, exc_val, exc_tb)
             self._binary = None
 
-        # Flush construct containers AFTER BinaryFile's writes so that construct
-        # writes overwrite the same offsets with the (same) container values.
-        if not self.readonly and not self.dry_run and self._construct_containers:
+        # Flush all flag mutations to disk in one build_stream pass.
+        if not self.readonly and not self.dry_run and self._flat is not None:
             try:
                 with self.path.open('r+b') as fh:
-                    for section_key, layout in LAYOUTS.items():
-                        if section_key in self._construct_containers:
-                            try:
-                                layout.build_stream(self._construct_containers[section_key], fh)
-                            except Exception:
-                                pass  # skip sections that fail to build
+                    FLAT_LAYOUT.build_stream(self._flat, fh)
             except Exception:
                 pass  # don't suppress the original exception
+
+        self._flat = None
 
     def _require_open(self) -> BinaryFile:
         if self._binary is None:
             raise RuntimeError("SaveFile not open — use as context manager")
         return self._binary
+
+    def _require_flat(self) -> cs.Container:
+        if self._flat is None:
+            raise RuntimeError("SaveFile not open — use as context manager")
+        return self._flat
 
     # ------------------------------------------------------------------
     # Flag-level API
@@ -261,33 +259,35 @@ class SaveFile:
 
     def get_flag(self, keypath: str) -> Any:
         """Read a single flag from the save file. Returns bool, int, or float."""
-        bf = self._require_open()
+        flat = self._require_flat()
         node = self._effectmap.get(keypath)
         if node is None:
             raise FlagReadError(f"Unknown keypath: {keypath!r}")
         if not node.entries:
             raise FlagReadError(f"No entries for keypath: {keypath!r}")
         entry = node.entries[0]
+        raw = flat[f"off{entry.offset}"]
         if isinstance(entry.value, bool):
-            raw = bf.read_uint32(entry.offset)
-            # entry.value=True  → flag is active when uint32 != 0 (game sometimes writes 2, not 1)
-            # entry.value=False → flag is active when uint32 == 0 (inverse: .unset/.notfound/etc.)
+            # entry.value=True  → active when raw != 0
+            # entry.value=False → active when raw == 0 (inverse alias)
             return (raw != 0) if entry.value else (raw == 0)
         elif entry.value == "float":
-            return bf.read_float(entry.offset)
+            return bits_to_float(raw)
         elif entry.value == "integer":
-            return bf.read_uint32(entry.offset)
+            return raw
         elif entry.value == "ascii":
-            return bf.read_ascii(entry.offset, entry.length or 32)
+            return raw.rstrip(b'\x00').decode('ascii', errors='replace') if isinstance(raw, (bytes, bytearray)) else raw
         elif entry.value == "utf8":
-            return bf.read_utf8(entry.offset, entry.length or 64)
+            return raw.rstrip(b'\x00').decode('utf-8', errors='replace') if isinstance(raw, (bytes, bytearray)) else raw
         else:
-            return bf.read_uint32(entry.offset)
+            return raw  # sentinel integer literal
 
     def set_flag(self, keypath: str, value: Any, *, unsafe: bool = False) -> None:
-        """Write a flag directly — no dependency cascade.
+        """Write a flag into the in-memory flat container.
 
-        Raises FlagWriteError if keypath is a danger key and unsafe=False.
+        Changes reach disk only when the SaveFile context manager exits
+        (via FLAT_LAYOUT.build_stream).  Raises FlagWriteError if keypath
+        is a danger key and unsafe=False.
         """
         if not unsafe:
             result = self._deps.check_safe(keypath, include_soft=False)
@@ -296,47 +296,44 @@ class SaveFile:
                     f"Refused: {keypath!r} implicates danger keys "
                     f"{result.danger_hits}. Pass unsafe=True to override."
                 )
-        bf = self._require_open()
+        flat = self._require_flat()
         node = self._effectmap.get(keypath)
         if node is None:
             raise FlagWriteError(f"Unknown keypath: {keypath!r}")
         if not node.entries:
             return
         for entry in node.entries:
-            if self.dry_run:
-                continue
+            key = f"off{entry.offset}"
             if isinstance(entry.value, bool):
-                # entry.value=True  → "active" means write 1 (normal)
-                # entry.value=False → "active" means write 0 (inverse)
-                #
-                # Skip the write when the current raw value is already at the
-                # desired logical state (game sometimes writes 2/3/5/etc. for
-                # "true"; we preserve that rather than normalising to 1).
-                current_raw = bf.read_uint32(entry.offset)
+                # Preserve the game's non-1 truthy raw values (2/3/5/0xa/…).
+                current = flat[key]
                 desired = bool(value)
-                current = bool(current_raw) if entry.value else (current_raw == 0)
-                if current == desired:
+                current_logical = bool(current) if entry.value else (current == 0)
+                if current_logical == desired:
                     continue
                 if entry.value:
-                    bf.write_uint32(entry.offset, 1 if value else 0)
+                    flat[key] = 1 if desired else 0
                 else:
-                    bf.write_uint32(entry.offset, 0 if value else 1)
+                    flat[key] = 0 if desired else 1
             elif entry.value == "float":
-                bf.write_float(entry.offset, float(value))
+                flat[key] = float_to_bits(float(value))
             elif entry.value == "integer":
-                bf.write_uint32(entry.offset, int(value))
+                flat[key] = int(value)
             elif entry.value == "ascii":
-                bf.write_ascii(entry.offset, str(value), entry.length or 32)
+                n = entry.length or 32
+                encoded = str(value).encode('ascii', errors='replace')[:n]
+                flat[key] = encoded + b'\x00' * (n - len(encoded))
             elif entry.value == "utf8":
-                bf.write_utf8(entry.offset, str(value), entry.length or 64)
+                n = entry.length or 64
+                encoded = str(value).encode('utf-8', errors='replace')[:n]
+                flat[key] = encoded + b'\x00' * (n - len(encoded))
             else:
-                # Integer-literal entries (enum sentinels etc.): skip if same
-                # logical state so game-specific non-1 truthy values are preserved.
-                current_raw = bf.read_uint32(entry.offset)
+                # Integer sentinel: skip if logical bool state already matches.
+                current = flat[key]
                 desired_int = int(value)
-                if bool(desired_int) == bool(current_raw):
+                if bool(current) == bool(desired_int):
                     continue
-                bf.write_uint32(entry.offset, desired_int)
+                flat[key] = desired_int
 
     def check_safe(self, keypath: str, *, include_soft: bool = True) -> DependencyResult:
         return self._deps.check_safe(keypath, include_soft=include_soft)

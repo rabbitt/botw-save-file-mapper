@@ -1,7 +1,11 @@
 """EntityProxy and EntityCollection — generic base classes for save entity wrappers.
 
-EntityProxy wraps a parsed construct Container for a single save entity.
-EntityCollection wraps a parsed construct Container for a section of entities.
+EntityProxy wraps a single entity's field_info dict + the shared flat cs.Container.
+EntityCollection wraps an entire section's worth of entity field_info dicts + the flat container.
+
+All reads and writes route through the flat container (parsed once on open,
+built back once on close via FLAT_LAYOUT.build_stream).  No per-entity
+sub-containers, no separate BinaryFile I/O for flags.
 """
 
 from __future__ import annotations
@@ -17,59 +21,101 @@ from .codecs import bits_to_float, float_to_bits
 
 
 class EntityProxy:
-    """Wraps a parsed construct Container for a single save entity."""
+    """Thin wrapper for a single save entity.
+
+    Args:
+        flat: The shared FLAT_LAYOUT container (all offsets parsed in one pass).
+        field_info: Mapping of field_name → (offset, val_type, length).
+                    val_type is one of: "bool", "float", "integer", "sentinel",
+                    "ascii", "utf8".
+    """
 
     _float_fields: frozenset[str] = frozenset()
     _ascii_fields: frozenset[str] = frozenset()
     _utf8_fields: frozenset[str] = frozenset()
 
-    def __init__(self, container: cs.Container) -> None:
-        object.__setattr__(self, '_c', container)
+    def __init__(
+        self,
+        flat: cs.Container,
+        field_info: dict[str, tuple[int, str, int | None]],
+    ) -> None:
+        object.__setattr__(self, '_flat', flat)
+        object.__setattr__(self, '_flds', field_info)
 
     @property
     def _fields(self) -> list[str]:
-        c = object.__getattribute__(self, '_c')
-        return [k for k in c.keys() if not k.startswith('_')]
+        return list(object.__getattribute__(self, '_flds').keys())
 
     def __getattr__(self, name: str):
-        c = object.__getattribute__(self, '_c')
-        if name.startswith('_') or name not in c:
+        flds = object.__getattribute__(self, '_flds')
+        if name.startswith('_') or name not in flds:
             raise AttributeError(name)
-        raw = c[name]
+        flat = object.__getattribute__(self, '_flat')
+        offset, val_type, length = flds[name]
+        raw = flat[f"off{offset}"]
+
+        # Class-level type overrides take precedence over effectmap val_type.
         if name in object.__getattribute__(self, '_float_fields'):
             return bits_to_float(raw)
         if name in object.__getattribute__(self, '_ascii_fields'):
             return raw.rstrip(b'\x00').decode('ascii', errors='replace') if isinstance(raw, (bytes, bytearray)) else raw
         if name in object.__getattribute__(self, '_utf8_fields'):
             return raw.rstrip(b'\x00').decode('utf-8', errors='replace') if isinstance(raw, (bytes, bytearray)) else raw
+
+        # Dispatch on effectmap val_type.
+        if val_type == "float":
+            return bits_to_float(raw)
+        if val_type == "ascii":
+            return raw.rstrip(b'\x00').decode('ascii', errors='replace') if isinstance(raw, (bytes, bytearray)) else raw
+        if val_type == "utf8":
+            return raw.rstrip(b'\x00').decode('utf-8', errors='replace') if isinstance(raw, (bytes, bytearray)) else raw
+        if val_type == "bool":
+            return bool(raw)
+        # "integer", "sentinel", or unknown: return raw value.
         return raw
 
     def __setattr__(self, name: str, value) -> None:
         if name.startswith('_'):
             object.__setattr__(self, name, value)
             return
-        c = object.__getattribute__(self, '_c')
-        if name not in c:
+        flds = object.__getattribute__(self, '_flds')
+        if name not in flds:
             object.__setattr__(self, name, value)
             return
-        if name in object.__getattribute__(self, '_float_fields'):
-            c[name] = float_to_bits(float(value))
-        elif name in object.__getattribute__(self, '_ascii_fields'):
-            length = len(c[name])
-            encoded = str(value).encode('ascii', errors='replace')[:length]
-            c[name] = encoded + b'\x00' * (length - len(encoded))
-        elif name in object.__getattribute__(self, '_utf8_fields'):
-            length = len(c[name])
-            encoded = str(value).encode('utf-8', errors='replace')[:length]
-            c[name] = encoded + b'\x00' * (length - len(encoded))
-        else:
-            existing = c[name]
-            new_int = int(value)
-            # Preserve the game's exact raw value when the logical state is already
-            # correct (game sometimes writes 2, 3, 5, 0xa, etc. for "true").
-            if isinstance(existing, int) and bool(new_int) == bool(existing):
+        flat = object.__getattribute__(self, '_flat')
+        offset, val_type, length = flds[name]
+        key = f"off{offset}"
+
+        if name in object.__getattribute__(self, '_float_fields') or val_type == "float":
+            flat[key] = float_to_bits(float(value))
+
+        elif name in object.__getattribute__(self, '_ascii_fields') or val_type == "ascii":
+            n = length or 32
+            encoded = str(value).encode('ascii', errors='replace')[:n]
+            flat[key] = encoded + b'\x00' * (n - len(encoded))
+
+        elif name in object.__getattribute__(self, '_utf8_fields') or val_type == "utf8":
+            n = length or 64
+            encoded = str(value).encode('utf-8', errors='replace')[:n]
+            flat[key] = encoded + b'\x00' * (n - len(encoded))
+
+        elif val_type == "bool":
+            existing = flat[key]
+            new_bool = bool(value)
+            # Preserve game's non-1 truthy raw values (2, 3, 5, 0xa, …).
+            if isinstance(existing, int) and bool(existing) == new_bool:
                 return
-            c[name] = new_int
+            flat[key] = 1 if new_bool else 0
+
+        else:
+            # "integer": always write exact value.
+            # "sentinel": skip if logical bool state already matches.
+            existing = flat[key]
+            new_int = int(value)
+            if val_type == "sentinel":
+                if isinstance(existing, int) and bool(existing) == bool(new_int):
+                    return
+            flat[key] = new_int
 
     def to_dict(self) -> dict:
         return {f: getattr(self, f) for f in self._fields}
@@ -89,37 +135,57 @@ class EntityProxy:
 
 
 class EntityCollection:
-    """Wraps a parsed construct Container for a section (collection of entities)."""
+    """Wraps an entire save section as a collection of EntityProxy objects.
+
+    Args:
+        flat: The shared FLAT_LAYOUT container.
+        section_info: Mapping of entity_name → field_info dict.
+    """
 
     proxy_class: type[EntityProxy] = EntityProxy
-    _section_names: list[str] = []  # override in subclasses
+    _section_names: list[str] = []
 
-    def __init__(self, container: cs.Container) -> None:
-        object.__setattr__(self, '_c', container)
+    def __init__(
+        self,
+        flat: cs.Container,
+        section_info: dict[str, dict[str, tuple[int, str, int | None]]],
+    ) -> None:
+        object.__setattr__(self, '_flat', flat)
+        object.__setattr__(self, '_info', section_info)
+
+    def _proxy(self, name: str) -> EntityProxy:
+        info = object.__getattribute__(self, '_info')
+        flat = object.__getattribute__(self, '_flat')
+        return type(self).proxy_class(flat, info[name])
 
     def __getattr__(self, name: str) -> EntityProxy:
         if name.startswith('_'):
             raise AttributeError(name)
-        c = object.__getattribute__(self, '_c')
-        if name not in c:
+        info = object.__getattribute__(self, '_info')
+        if name not in info:
             raise AttributeError(name)
-        cls = type(self).proxy_class
-        return cls(c[name])
+        return self._proxy(name)
 
     def __getitem__(self, name: str) -> EntityProxy:
-        c = object.__getattribute__(self, '_c')
-        return type(self).proxy_class(c[name])
+        info = object.__getattribute__(self, '_info')
+        if name not in info:
+            raise KeyError(name)
+        return self._proxy(name)
 
     def __iter__(self) -> Iterator[tuple[str, EntityProxy]]:
-        c = object.__getattribute__(self, '_c')
-        cls = type(self).proxy_class
-        return ((name, cls(c[name])) for name in type(self)._section_names if name in c)
+        info = object.__getattribute__(self, '_info')
+        return (
+            (name, self._proxy(name))
+            for name in type(self)._section_names
+            if name in info
+        )
 
     def __len__(self) -> int:
         return len(type(self)._section_names)
 
     def __contains__(self, name: str) -> bool:
-        return name in type(self)._section_names
+        info = object.__getattribute__(self, '_info')
+        return name in info
 
     def to_dict(self) -> dict:
         return {name: proxy.to_dict() for name, proxy in self}

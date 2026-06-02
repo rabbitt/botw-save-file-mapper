@@ -151,7 +151,7 @@ class SaveFile:
         self._binary: BinaryFile | None = None
 
     def __enter__(self) -> "SaveFile":
-        self._binary = BinaryFile(self.path, readonly=self.readonly)
+        self._binary = BinaryFile(self.path, self._effectmap, readonly=self.readonly)
         self._binary.__enter__()
         return self
 
@@ -179,7 +179,10 @@ class SaveFile:
             raise FlagReadError(f"No entries for keypath: {keypath!r}")
         entry = node.entries[0]
         if isinstance(entry.value, bool):
-            return bf.read_uint32(entry.offset) == 1
+            raw = bf.read_uint32(entry.offset)
+            # entry.value=True  → flag is active when uint32 != 0 (game sometimes writes 2, not 1)
+            # entry.value=False → flag is active when uint32 == 0 (inverse: .unset/.notfound/etc.)
+            return (raw != 0) if entry.value else (raw == 0)
         elif entry.value == "float":
             return bf.read_float(entry.offset)
         elif entry.value == "integer":
@@ -213,7 +216,12 @@ class SaveFile:
             if self.dry_run:
                 continue
             if isinstance(entry.value, bool):
-                bf.write_uint32(entry.offset, 1 if value else 0)
+                # entry.value=True  → "active" means write 1 (normal)
+                # entry.value=False → "active" means write 0 (inverse)
+                if entry.value:
+                    bf.write_uint32(entry.offset, 1 if value else 0)
+                else:
+                    bf.write_uint32(entry.offset, 0 if value else 1)
             elif entry.value == "float":
                 bf.write_float(entry.offset, float(value))
             elif entry.value == "integer":

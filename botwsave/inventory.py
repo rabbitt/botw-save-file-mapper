@@ -4,6 +4,10 @@ Items are stored in a single contiguous array of 128-byte slots starting at
 SLOTS_BASE. Categories are ordered: weapons → bows → arrows → shields →
 armor → materials → food → keyitems. Category boundaries are detected by
 matching slot entry patterns against the item catalog YAMLs.
+
+All reads and writes go through the shared flat dict (keyed "off{offset}")
+that is populated and snapshotted by SaveFile.__enter__. Only values that
+actually change are ever written back to disk.
 """
 
 from __future__ import annotations
@@ -13,7 +17,6 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
 
-from .binary import BinaryFile
 from .catalog import (
     CATEGORIES, get_catalog, get_item_def, match_slot_entries, write_entries_for,
 )
@@ -140,7 +143,7 @@ _UNWRITEABLE_KEY_ITEMS = frozenset({
     "daruksprotection", "miphasgrace", "revalisgale", "urbosasfury",
 })
 
-# Stackable hearts placeholder value (for stackable food items)
+# Stackable hearts placeholder value (for stackable food items with hearts > 0)
 _STACKABLE_HEARTS_BITS = 0xBF800000
 
 
@@ -248,41 +251,53 @@ class Inventory:
 
 
 # ---------------------------------------------------------------------------
-# Slot entry reading
+# Flat-dict helpers  (all I/O goes through the shared construct flat dict)
 # ---------------------------------------------------------------------------
 
-def _read_slot_entries(bf: BinaryFile, slot: int) -> list[dict]:
-    """Read the 16 uint32 values from a slot as relative-offset entry dicts."""
+def _r(flat: dict, off: int) -> int:
+    return flat[f"off{off}"]
+
+
+def _w(flat: dict, off: int, val: int) -> None:
+    flat[f"off{off}"] = val & 0xFFFFFFFF
+
+
+# ---------------------------------------------------------------------------
+# Slot entry reading / writing
+# ---------------------------------------------------------------------------
+
+def _read_slot_entries(flat: dict, slot: int) -> list[dict]:
     base = O.slot_offset(slot)
     return [
-        {"offset": i * 8, "value": bf.read_uint32(base + i * 8)}
+        {"offset": i * 8, "value": _r(flat, base + i * 8)}
         for i in range(O.SLOT_UINT32S)
     ]
 
 
-def _write_slot_entries(bf: BinaryFile, slot: int, entries: list[dict]) -> None:
-    """Write an item's entry pattern to a slot, zero-filling unused positions."""
+def _write_slot_entries(flat: dict, slot: int, entries: list[dict]) -> None:
+    """Write only the provided entries; leave unspecified positions untouched.
+
+    The snapshot comparison in SaveFile.__exit__ ensures that positions we
+    don't touch stay at their original bytes, so there is no need to zero-fill.
+    """
     base = O.slot_offset(slot)
-    data = {e["offset"]: e["value"] for e in entries}
-    for i in range(O.SLOT_UINT32S):
-        bf.write_uint32(base + i * 8, data.get(i * 8, 0))
+    for e in entries:
+        _w(flat, base + e["offset"], e["value"])
 
 
 # ---------------------------------------------------------------------------
 # Category boundary detection
 # ---------------------------------------------------------------------------
 
-def _detect_slot_ranges(bf: BinaryFile) -> dict[str, tuple[int, int]]:
-    """Return {category: (first_slot, last_slot)} by scanning the save binary."""
-    weapon_stash = bf.read_uint32(O.WEAPON_STASH_OFFSET)
-    bow_stash = bf.read_uint32(O.BOW_STASH_OFFSET)
-    shield_stash = bf.read_uint32(O.SHIELD_STASH_OFFSET)
+def _detect_slot_ranges(flat: dict) -> dict[str, tuple[int, int]]:
+    weapon_stash = _r(flat, O.WEAPON_STASH_OFFSET)
+    bow_stash    = _r(flat, O.BOW_STASH_OFFSET)
+    shield_stash = _r(flat, O.SHIELD_STASH_OFFSET)
 
-    # Weapons: scan up to stash limit, check for weapon type marker at offset +8
     weapon_first = 0
     weapon_count = 0
     for i in range(weapon_stash):
-        marker = bf.read_uint32(O.slot_offset(weapon_first + i) + 8)
+        marker = _r(flat, O.slot_offset(weapon_first + i) + 8)
         if marker not in (O.ITEM_TYPE_TWOHANDED, O.ITEM_TYPE_MELEE_OTHER):
             break
         weapon_count += 1
@@ -290,67 +305,64 @@ def _detect_slot_ranges(bf: BinaryFile) -> dict[str, tuple[int, int]]:
     bow_first = weapon_first + weapon_count
     bow_count = 0
     for i in range(bow_stash):
-        marker = bf.read_uint32(O.slot_offset(bow_first + i) + 8)
+        marker = _r(flat, O.slot_offset(bow_first + i) + 8)
         if marker != O.ITEM_TYPE_BOW:
             break
         bow_count += 1
 
-    # Arrows: detect by catalog matching
-    arrow_first = bow_first + bow_count
+    arrow_first   = bow_first + bow_count
     arrow_catalog = get_catalog("arrows")
-    arrow_names = list(arrow_catalog.keys())
-    arrow_count = 0
-    for name in arrow_names:
+    arrow_count   = 0
+    for name in arrow_catalog:
         entries = arrow_catalog[name].get("entries", [])
         if not entries:
             continue
-        slot_entries = _read_slot_entries(bf, arrow_first + arrow_count)
-        matched = match_slot_entries(slot_entries, "arrows")
-        if matched:
+        slot_entries = _read_slot_entries(flat, arrow_first + arrow_count)
+        if match_slot_entries(slot_entries, "arrows"):
             arrow_count += 1
 
     shield_first = arrow_first + arrow_count
     shield_count = 0
     for i in range(shield_stash):
-        marker = bf.read_uint32(O.slot_offset(shield_first + i))
+        marker = _r(flat, O.slot_offset(shield_first + i))
         if marker != O.ITEM_TYPE_STASHABLE:
             break
         shield_count += 1
 
     armor_first = shield_first + shield_count
     armor_count = 0
-    while bf.read_uint32(O.slot_offset(armor_first + armor_count)) == O.ITEM_TYPE_ARMOR:
+    while _r(flat, O.slot_offset(armor_first + armor_count)) == O.ITEM_TYPE_ARMOR:
         armor_count += 1
 
     material_first = armor_first + armor_count
-    material_count = _count_by_catalog(bf, material_first, "materials")
+    material_count = _count_by_catalog(flat, material_first, "materials")
 
     food_first = material_first + material_count
-    food_count = _count_by_catalog(bf, food_first, "food")
+    food_count = _count_by_catalog(flat, food_first, "food")
 
     keyitem_first = food_first + food_count
-    keyitem_count = _count_by_catalog(bf, keyitem_first, "keyitems")
+    keyitem_count = _count_by_catalog(flat, keyitem_first, "keyitems")
 
     def _range(first: int, count: int) -> tuple[int, int]:
         last = first + count - 1 if count > 0 else first
         return first, last
 
     return {
-        "weapons": _range(weapon_first, weapon_count),
-        "bows": _range(bow_first, bow_count),
-        "arrows": _range(arrow_first, arrow_count),
-        "shields": _range(shield_first, shield_count),
-        "armor": _range(armor_first, armor_count),
+        "weapons":  _range(weapon_first,   weapon_count),
+        "bows":     _range(bow_first,      bow_count),
+        "arrows":   _range(arrow_first,    arrow_count),
+        "shields":  _range(shield_first,   shield_count),
+        "armor":    _range(armor_first,    armor_count),
         "materials": _range(material_first, material_count),
-        "food": _range(food_first, food_count),
-        "keyitems": _range(keyitem_first, keyitem_count),
+        "food":     _range(food_first,     food_count),
+        "keyitems": _range(keyitem_first,  keyitem_count),
     }
 
 
-def _count_by_catalog(bf: BinaryFile, first_slot: int, category: str) -> int:
+def _count_by_catalog(flat: dict, first_slot: int, category: str) -> int:
     count = 0
     while True:
-        entries = _read_slot_entries(bf, first_slot + count)
+        entries = _read_slot_entries(flat, first_slot + count)
         if not match_slot_entries(entries, category):
             break
         count += 1
@@ -361,81 +373,80 @@ def _count_by_catalog(bf: BinaryFile, first_slot: int, category: str) -> int:
 # Read
 # ---------------------------------------------------------------------------
 
-def read_inventory(bf: BinaryFile) -> Inventory:
-    """Read the full inventory from an open BinaryFile."""
-    ranges = _detect_slot_ranges(bf)
+def read_inventory(flat: dict) -> Inventory:
+    ranges = _detect_slot_ranges(flat)
 
     inv = Inventory(
-        stash_weapons=bf.read_uint32(O.WEAPON_STASH_OFFSET),
-        stash_bows=bf.read_uint32(O.BOW_STASH_OFFSET),
-        stash_shields=bf.read_uint32(O.SHIELD_STASH_OFFSET),
+        stash_weapons=_r(flat, O.WEAPON_STASH_OFFSET),
+        stash_bows=_r(flat, O.BOW_STASH_OFFSET),
+        stash_shields=_r(flat, O.SHIELD_STASH_OFFSET),
     )
 
     first, last = ranges["weapons"]
     for slot in range(first, last + 1):
-        entries = _read_slot_entries(bf, slot)
+        entries = _read_slot_entries(flat, slot)
         name = match_slot_entries(entries, "weapons")
         if not name:
             break
         idx = slot - first
         inv.weapons.append(WeaponItem(
             name=name,
-            equipped=bool(bf.read_uint32(O.equipped_offset(slot))),
-            durability=bf.read_uint32(O.quantity_offset(slot)),
-            bonus=_read_weapon_bonus(bf, idx, "weapons", _WEAPON_BONUS_DECODE),
+            equipped=bool(_r(flat, O.equipped_offset(slot))),
+            durability=_r(flat, O.quantity_offset(slot)),
+            bonus=_read_weapon_bonus(flat, idx, "weapons", _WEAPON_BONUS_DECODE),
         ))
 
     first, last = ranges["bows"]
     for slot in range(first, last + 1):
-        entries = _read_slot_entries(bf, slot)
+        entries = _read_slot_entries(flat, slot)
         name = match_slot_entries(entries, "bows")
         if not name:
             break
         idx = slot - first
         inv.bows.append(BowItem(
             name=name,
-            equipped=bool(bf.read_uint32(O.equipped_offset(slot))),
-            durability=bf.read_uint32(O.quantity_offset(slot)),
-            bonus=_read_weapon_bonus(bf, idx, "bows", _BOW_BONUS_DECODE),
+            equipped=bool(_r(flat, O.equipped_offset(slot))),
+            durability=_r(flat, O.quantity_offset(slot)),
+            bonus=_read_weapon_bonus(flat, idx, "bows", _BOW_BONUS_DECODE),
         ))
 
     first, last = ranges["arrows"]
     for slot in range(first, last + 1):
-        entries = _read_slot_entries(bf, slot)
+        entries = _read_slot_entries(flat, slot)
         name = match_slot_entries(entries, "arrows")
         if not name:
             break
         inv.arrows.append(ArrowItem(
             name=name,
-            equipped=bool(bf.read_uint32(O.equipped_offset(slot))),
-            quantity=bf.read_uint32(O.quantity_offset(slot)),
+            equipped=bool(_r(flat, O.equipped_offset(slot))),
+            quantity=_r(flat, O.quantity_offset(slot)),
         ))
 
     first, last = ranges["shields"]
     for slot in range(first, last + 1):
-        entries = _read_slot_entries(bf, slot)
+        entries = _read_slot_entries(flat, slot)
         name = match_slot_entries(entries, "shields")
         if not name:
             break
         idx = slot - first
         inv.shields.append(ShieldItem(
             name=name,
-            equipped=bool(bf.read_uint32(O.equipped_offset(slot))),
-            durability=bf.read_uint32(O.quantity_offset(slot)),
-            bonus=_read_weapon_bonus(bf, idx, "shields", _SHIELD_BONUS_DECODE),
+            equipped=bool(_r(flat, O.equipped_offset(slot))),
+            durability=_r(flat, O.quantity_offset(slot)),
+            bonus=_read_weapon_bonus(flat, idx, "shields", _SHIELD_BONUS_DECODE),
         ))
 
     first, last = ranges["armor"]
     for slot in range(first, last + 1):
-        entries = _read_slot_entries(bf, slot)
+        entries = _read_slot_entries(flat, slot)
         name = match_slot_entries(entries, "armor")
         if not name:
             break
-        color_val = bf.read_uint32(O.quantity_offset(slot))
+        color_val = _r(flat, O.quantity_offset(slot))
         color = _DYE_DECODE.get(color_val, "original")
         item = ArmorItem(
             name=name,
-            equipped=bool(bf.read_uint32(O.equipped_offset(slot))),
+            equipped=bool(_r(flat, O.equipped_offset(slot))),
         )
         if color != "original":
             item.color = color
@@ -443,29 +454,29 @@ def read_inventory(bf: BinaryFile) -> Inventory:
 
     first, last = ranges["materials"]
     for slot in range(first, last + 1):
-        entries = _read_slot_entries(bf, slot)
+        entries = _read_slot_entries(flat, slot)
         name = match_slot_entries(entries, "materials")
         if not name:
             break
         inv.materials.append(MaterialItem(
             name=name,
-            quantity=bf.read_uint32(O.quantity_offset(slot)),
+            quantity=_r(flat, O.quantity_offset(slot)),
         ))
 
     first, last = ranges["food"]
     for slot in range(first, last + 1):
-        entries = _read_slot_entries(bf, slot)
+        entries = _read_slot_entries(flat, slot)
         name = match_slot_entries(entries, "food")
         if not name:
             break
         idx = slot - first
         item_def = get_item_def(name, "food") or {}
         stackable = item_def.get("stackable", True)
-        inv.food.append(_read_food_item(bf, name, slot, idx, stackable))
+        inv.food.append(_read_food_item(flat, name, slot, idx, stackable))
 
     first, last = ranges["keyitems"]
     for slot in range(first, last + 1):
-        entries = _read_slot_entries(bf, slot)
+        entries = _read_slot_entries(flat, slot)
         name = match_slot_entries(entries, "keyitems")
         if not name:
             break
@@ -474,40 +485,36 @@ def read_inventory(bf: BinaryFile) -> Inventory:
             name=name,
             unique=item_def.get("unique", False),
             stackable=item_def.get("stackable", False),
-            quantity=bf.read_uint32(O.quantity_offset(slot)),
+            quantity=_r(flat, O.quantity_offset(slot)),
         ))
 
     return inv
 
 
-def _read_weapon_bonus(
-    bf: BinaryFile, idx: int, category: str, decode_map: dict
-) -> ItemBonus | None:
-    type_bits = bf.read_uint32(O.bonus_type_offset(idx, category))
+def _read_weapon_bonus(flat: dict, idx: int, category: str, decode_map: dict) -> ItemBonus | None:
+    type_bits = _r(flat, O.bonus_type_offset(idx, category))
     bonus_type = decode_map.get(type_bits)
     if bonus_type is None:
         return None
-    amount = bf.read_uint32(O.bonus_amount_offset(idx, category))
+    amount = _r(flat, O.bonus_amount_offset(idx, category))
     return ItemBonus(type=bonus_type, amount=amount)
 
 
-def _read_food_item(
-    bf: BinaryFile, name: str, slot: int, idx: int, stackable: bool
-) -> FoodItem:
-    hearts_bits = bf.read_uint32(O.food_hearts_offset(idx))
+def _read_food_item(flat: dict, name: str, slot: int, idx: int, stackable: bool) -> FoodItem:
+    hearts_bits  = _r(flat, O.food_hearts_offset(idx))
     quarter_hearts = bits_to_int(hearts_bits)
-    full_hearts = quarter_hearts / 4.0
+    full_hearts  = quarter_hearts / 4.0
 
     is_frozen = name.startswith("frozen") or name.startswith("icy")
     if is_frozen:
         return FoodItem(
             name=name, stackable=stackable,
-            quantity=bf.read_uint32(O.quantity_offset(slot)),
+            quantity=_r(flat, O.quantity_offset(slot)),
             hearts=full_hearts,
             bonus=FoodBonus(type="chilly", amount=1, duration="01:00"),
         )
 
-    type_bits = bf.read_uint32(O.food_bonus_type_offset(idx))
+    type_bits  = _r(flat, O.food_bonus_type_offset(idx))
     bonus_type = _FOOD_TYPE_DECODE.get(type_bits)
 
     bonus: FoodBonus | None = None
@@ -515,21 +522,21 @@ def _read_food_item(
 
     if bonus_type == "hearty":
         hearts = "fullrecovery"
-        bonus = FoodBonus(type="hearty", amount=full_hearts)
+        bonus  = FoodBonus(type="hearty", amount=full_hearts)
     elif bonus_type == "energizing":
-        raw = bits_to_float(bf.read_uint32(O.food_bonus_amount_offset(idx)))
+        raw   = bits_to_float(_r(flat, O.food_bonus_amount_offset(idx)))
         bonus = FoodBonus(type="energizing", amount=raw / 1000.0)
     elif bonus_type == "enduring":
-        raw = bits_to_float(bf.read_uint32(O.food_bonus_amount_offset(idx)))
+        raw   = bits_to_float(_r(flat, O.food_bonus_amount_offset(idx)))
         bonus = FoodBonus(type="enduring", amount=raw / 5.0)
     elif bonus_type is not None:
-        amount = _FOOD_AMOUNT_DECODE.get(bf.read_uint32(O.food_bonus_amount_offset(idx)), 0)
-        duration = decode_duration(bf.read_uint32(O.food_duration_offset(idx)))
-        bonus = FoodBonus(type=bonus_type, amount=amount, duration=duration)
+        amount   = _FOOD_AMOUNT_DECODE.get(_r(flat, O.food_bonus_amount_offset(idx)), 0)
+        duration = decode_duration(_r(flat, O.food_duration_offset(idx)))
+        bonus    = FoodBonus(type=bonus_type, amount=amount, duration=duration)
 
     return FoodItem(
         name=name, stackable=stackable,
-        quantity=bf.read_uint32(O.quantity_offset(slot)),
+        quantity=_r(flat, O.quantity_offset(slot)),
         hearts=hearts,
         bonus=bonus,
     )
@@ -539,182 +546,171 @@ def _read_food_item(
 # Write
 # ---------------------------------------------------------------------------
 
-def write_inventory(bf: BinaryFile, inv: Inventory) -> None:
-    """Write the full inventory to an open BinaryFile."""
+def write_inventory(flat: dict, inv: Inventory) -> None:
     slot = 0
-
-    slot = _write_weapons(bf, inv, slot)
-    slot = _write_bows(bf, inv, slot)
-    slot = _write_arrows(bf, inv, slot)
-    slot = _write_shields(bf, inv, slot)
-    slot = _write_armor(bf, inv, slot)
-    slot = _write_materials(bf, inv, slot)
-    slot = _write_food(bf, inv, slot)
-    _write_keyitems(bf, inv, slot)
+    slot = _write_weapons(flat, inv, slot)
+    slot = _write_bows(flat, inv, slot)
+    slot = _write_arrows(flat, inv, slot)
+    slot = _write_shields(flat, inv, slot)
+    slot = _write_armor(flat, inv, slot)
+    slot = _write_materials(flat, inv, slot)
+    slot = _write_food(flat, inv, slot)
+    _write_keyitems(flat, inv, slot)
 
 
 def _condense(items: list, category: str) -> list:
-    """Stack stackable duplicates and drop excess unique items (mirrors Node behaviour)."""
+    """Drop extra copies of unique items; preserve all other slots as-is.
+
+    Each slot is written back verbatim so a no-change round-trip is
+    byte-identical.  Unique items may only appear once; stackable quantities
+    are capped at 999 per slot but slots are never merged across the list.
+    """
     catalog = get_catalog(category)
-    counts: dict[str, int] = {}
     seen_unique: set[str] = set()
     result = []
-
     for item in items:
-        item_def = catalog.get(item.name, {})
-        unique = item_def.get("unique", getattr(item, "unique", False))
+        item_def  = catalog.get(item.name, {})
+        unique    = item_def.get("unique",    getattr(item, "unique",    False))
         stackable = item_def.get("stackable", getattr(item, "stackable", False))
-
         if unique and item.name in seen_unique:
             continue
         seen_unique.add(item.name)
-
-        qty = getattr(item, "quantity", 1)
-        if stackable:
-            if item.name not in counts:
-                counts[item.name] = 0
-                result.append(item)
-            counts[item.name] = min(counts[item.name] + qty, 999)
-        else:
-            counts[item.name] = qty
-            result.append(item)
-
-    for item in result:
-        item_def = catalog.get(item.name, {})
-        if item_def.get("stackable", getattr(item, "stackable", False)):
-            item.quantity = counts[item.name]
-
+        if stackable and hasattr(item, "quantity"):
+            item.quantity = min(item.quantity, 999)
+        result.append(item)
     return result
 
 
-def _write_weapons(bf: BinaryFile, inv: Inventory, first_slot: int) -> int:
+def _write_weapons(flat: dict, inv: Inventory, first_slot: int) -> int:
     items = _condense(list(inv.weapons), "weapons")
-    bf.write_uint32(O.WEAPON_STASH_OFFSET, inv.stash_weapons)
+    _w(flat, O.WEAPON_STASH_OFFSET, inv.stash_weapons)
     for i, item in enumerate(items):
         slot = first_slot + i
-        _write_slot_entries(bf, slot, write_entries_for(item.name, "weapons"))
-        bf.write_uint32(O.equipped_offset(slot), 1 if item.equipped else 0)
-        bf.write_uint32(O.quantity_offset(slot), item.durability)
+        _write_slot_entries(flat, slot, write_entries_for(item.name, "weapons"))
+        _w(flat, O.equipped_offset(slot), 1 if item.equipped else 0)
+        _w(flat, O.quantity_offset(slot), item.durability)
         bt = _WEAPON_BONUS_ENCODE.get(item.bonus.type, 0) if item.bonus else 0
         ba = item.bonus.amount if item.bonus else 0
-        bf.write_uint32(O.bonus_type_offset(i, "weapons"), bt)
-        bf.write_uint32(O.bonus_amount_offset(i, "weapons"), ba)
+        _w(flat, O.bonus_type_offset(i, "weapons"), bt)
+        _w(flat, O.bonus_amount_offset(i, "weapons"), ba)
     return first_slot + len(items)
 
 
-def _write_bows(bf: BinaryFile, inv: Inventory, first_slot: int) -> int:
+def _write_bows(flat: dict, inv: Inventory, first_slot: int) -> int:
     items = _condense(list(inv.bows), "bows")
-    bf.write_uint32(O.BOW_STASH_OFFSET, inv.stash_bows)
+    _w(flat, O.BOW_STASH_OFFSET, inv.stash_bows)
     for i, item in enumerate(items):
         slot = first_slot + i
-        _write_slot_entries(bf, slot, write_entries_for(item.name, "bows"))
-        bf.write_uint32(O.equipped_offset(slot), 1 if item.equipped else 0)
-        bf.write_uint32(O.quantity_offset(slot), item.durability)
+        _write_slot_entries(flat, slot, write_entries_for(item.name, "bows"))
+        _w(flat, O.equipped_offset(slot), 1 if item.equipped else 0)
+        _w(flat, O.quantity_offset(slot), item.durability)
         bt = _BOW_BONUS_ENCODE.get(item.bonus.type, 0) if item.bonus else 0
         ba = item.bonus.amount if item.bonus else 0
-        bf.write_uint32(O.bonus_type_offset(i, "bows"), bt)
-        bf.write_uint32(O.bonus_amount_offset(i, "bows"), ba)
+        _w(flat, O.bonus_type_offset(i, "bows"), bt)
+        _w(flat, O.bonus_amount_offset(i, "bows"), ba)
     return first_slot + len(items)
 
 
-def _write_arrows(bf: BinaryFile, inv: Inventory, first_slot: int) -> int:
+def _write_arrows(flat: dict, inv: Inventory, first_slot: int) -> int:
     items = _condense(list(inv.arrows), "arrows")
     for i, item in enumerate(items):
         slot = first_slot + i
-        _write_slot_entries(bf, slot, write_entries_for(item.name, "arrows"))
-        bf.write_uint32(O.equipped_offset(slot), 1 if item.equipped else 0)
-        bf.write_uint32(O.quantity_offset(slot), item.quantity)
+        _write_slot_entries(flat, slot, write_entries_for(item.name, "arrows"))
+        _w(flat, O.equipped_offset(slot), 1 if item.equipped else 0)
+        _w(flat, O.quantity_offset(slot), item.quantity)
     return first_slot + len(items)
 
 
-def _write_shields(bf: BinaryFile, inv: Inventory, first_slot: int) -> int:
+def _write_shields(flat: dict, inv: Inventory, first_slot: int) -> int:
     items = _condense(list(inv.shields), "shields")
-    bf.write_uint32(O.SHIELD_STASH_OFFSET, inv.stash_shields)
+    _w(flat, O.SHIELD_STASH_OFFSET, inv.stash_shields)
     for i, item in enumerate(items):
         slot = first_slot + i
-        _write_slot_entries(bf, slot, write_entries_for(item.name, "shields"))
-        bf.write_uint32(O.equipped_offset(slot), 1 if item.equipped else 0)
-        bf.write_uint32(O.quantity_offset(slot), item.durability)
+        _write_slot_entries(flat, slot, write_entries_for(item.name, "shields"))
+        _w(flat, O.equipped_offset(slot), 1 if item.equipped else 0)
+        _w(flat, O.quantity_offset(slot), item.durability)
         bt = _SHIELD_BONUS_ENCODE.get(item.bonus.type, 0) if item.bonus else 0
         ba = item.bonus.amount if item.bonus else 0
-        bf.write_uint32(O.bonus_type_offset(i, "shields"), bt)
-        bf.write_uint32(O.bonus_amount_offset(i, "shields"), ba)
+        _w(flat, O.bonus_type_offset(i, "shields"), bt)
+        _w(flat, O.bonus_amount_offset(i, "shields"), ba)
     return first_slot + len(items)
 
 
-def _write_armor(bf: BinaryFile, inv: Inventory, first_slot: int) -> int:
+def _write_armor(flat: dict, inv: Inventory, first_slot: int) -> int:
     items = _condense(list(inv.armor), "armor")
     for i, item in enumerate(items):
         slot = first_slot + i
-        _write_slot_entries(bf, slot, write_entries_for(item.name, "armor"))
-        bf.write_uint32(O.equipped_offset(slot), 1 if item.equipped else 0)
-        bf.write_uint32(O.quantity_offset(slot), _DYE_ENCODE.get(item.color, 0))
+        _write_slot_entries(flat, slot, write_entries_for(item.name, "armor"))
+        _w(flat, O.equipped_offset(slot), 1 if item.equipped else 0)
+        _w(flat, O.quantity_offset(slot), _DYE_ENCODE.get(item.color, 0))
     return first_slot + len(items)
 
 
-def _write_materials(bf: BinaryFile, inv: Inventory, first_slot: int) -> int:
+def _write_materials(flat: dict, inv: Inventory, first_slot: int) -> int:
     items = _condense(list(inv.materials), "materials")
     for i, item in enumerate(items):
         slot = first_slot + i
-        _write_slot_entries(bf, slot, write_entries_for(item.name, "materials"))
-        bf.write_uint32(O.equipped_offset(slot), 0)
-        bf.write_uint32(O.quantity_offset(slot), item.quantity)
+        _write_slot_entries(flat, slot, write_entries_for(item.name, "materials"))
+        _w(flat, O.equipped_offset(slot), 0)
+        _w(flat, O.quantity_offset(slot), item.quantity)
     return first_slot + len(items)
 
 
-def _write_food(bf: BinaryFile, inv: Inventory, first_slot: int) -> int:
+def _write_food(flat: dict, inv: Inventory, first_slot: int) -> int:
     items = _condense(list(inv.food), "food")
     for i, item in enumerate(items):
         slot = first_slot + i
-        _write_slot_entries(bf, slot, write_entries_for(item.name, "food"))
-        bf.write_uint32(O.equipped_offset(slot), 0)
-        bf.write_uint32(O.quantity_offset(slot), item.quantity if item.stackable else 1)
+        _write_slot_entries(flat, slot, write_entries_for(item.name, "food"))
+        _w(flat, O.equipped_offset(slot), 0)
+        _w(flat, O.quantity_offset(slot), item.quantity if item.stackable else 1)
 
         full_hearts = (
             item.bonus.amount if item.bonus and item.bonus.type == "hearty"
             else (item.hearts if isinstance(item.hearts, (int, float)) else 0)
         )
         quarter_hearts = int(full_hearts * 4)
-        hearts_bits = _STACKABLE_HEARTS_BITS if item.stackable else int_to_bits(quarter_hearts)
-        bf.write_uint32(O.food_hearts_offset(i), hearts_bits)
+        # Stackable items with 0 hearts store 0 (not the -1.0 sentinel).
+        # The sentinel is only used for stackable items that restore hearts.
+        if item.stackable and quarter_hearts > 0:
+            hearts_bits = _STACKABLE_HEARTS_BITS
+        else:
+            hearts_bits = int_to_bits(quarter_hearts)
+        _w(flat, O.food_hearts_offset(i), hearts_bits)
 
         if item.bonus and item.bonus.type:
             bt = _FOOD_TYPE_ENCODE.get(item.bonus.type, _FOOD_TYPE_ENCODE["none"])
-            bf.write_uint32(O.food_bonus_type_offset(i), bt)
+            _w(flat, O.food_bonus_type_offset(i), bt)
             if item.bonus.type == "energizing":
-                bf.write_uint32(O.food_bonus_amount_offset(i), float_to_bits(item.bonus.amount * 1000))
-                bf.write_uint32(O.food_duration_offset(i), 0)
+                _w(flat, O.food_bonus_amount_offset(i), float_to_bits(item.bonus.amount * 1000))
+                # Duration slot intentionally not written: game may store unrelated data here
             elif item.bonus.type == "enduring":
-                bf.write_uint32(O.food_bonus_amount_offset(i), float_to_bits(item.bonus.amount * 5.0))
-                bf.write_uint32(O.food_duration_offset(i), 0)
+                _w(flat, O.food_bonus_amount_offset(i), float_to_bits(item.bonus.amount * 5.0))
             elif item.bonus.type == "hearty":
-                bf.write_uint32(O.food_bonus_amount_offset(i), int_to_bits(quarter_hearts))
-                bf.write_uint32(O.food_duration_offset(i), 0)
+                _w(flat, O.food_bonus_amount_offset(i), int_to_bits(quarter_hearts))
             elif item.bonus.duration:
-                bf.write_uint32(O.food_bonus_amount_offset(i), _FOOD_AMOUNT_ENCODE.get(int(item.bonus.amount), 0))
-                bf.write_uint32(O.food_duration_offset(i), encode_duration(item.bonus.duration))
+                _w(flat, O.food_bonus_amount_offset(i), _FOOD_AMOUNT_ENCODE.get(int(item.bonus.amount), 0))
+                _w(flat, O.food_duration_offset(i), encode_duration(item.bonus.duration))
             else:
-                bf.write_uint32(O.food_bonus_amount_offset(i), 0)
-                bf.write_uint32(O.food_duration_offset(i), 0)
+                _w(flat, O.food_bonus_amount_offset(i), 0)
         else:
-            bf.write_uint32(O.food_bonus_type_offset(i), _FOOD_TYPE_ENCODE["none"])
-            bf.write_uint32(O.food_bonus_amount_offset(i), 0)
-            bf.write_uint32(O.food_duration_offset(i), 0)
+            _w(flat, O.food_bonus_type_offset(i), _FOOD_TYPE_ENCODE["none"])
+            _w(flat, O.food_bonus_amount_offset(i), 0)
 
     return first_slot + len(items)
 
 
-def _write_keyitems(bf: BinaryFile, inv: Inventory, first_slot: int) -> None:
+def _write_keyitems(flat: dict, inv: Inventory, first_slot: int) -> None:
     writeable = [i for i in inv.keyitems if i.name not in _UNWRITEABLE_KEY_ITEMS]
     items = _condense(writeable, "keyitems")
     for i, item in enumerate(items):
         slot = first_slot + i
-        _write_slot_entries(bf, slot, write_entries_for(item.name, "keyitems"))
-        bf.write_uint32(O.equipped_offset(slot), 0)
-        bf.write_uint32(O.quantity_offset(slot), item.quantity or 1)
-    # Write a zeroed terminator slot after the last key item
-    terminator_slot = first_slot + len(items)
-    _write_slot_entries(bf, terminator_slot, [{"offset": i * 8, "value": 0} for i in range(O.SLOT_UINT32S)])
+        _write_slot_entries(flat, slot, write_entries_for(item.name, "keyitems"))
+        _w(flat, O.equipped_offset(slot), 0)
+        _w(flat, O.quantity_offset(slot), item.quantity or 1)
+    # Zero the terminator slot so the game knows where the list ends.
+    terminator = first_slot + len(items)
+    for j in range(O.SLOT_UINT32S):
+        _w(flat, O.slot_offset(terminator) + j * 8, 0)
 
 
 # ---------------------------------------------------------------------------
@@ -722,7 +718,6 @@ def _write_keyitems(bf: BinaryFile, inv: Inventory, first_slot: int) -> None:
 # ---------------------------------------------------------------------------
 
 def inventory_from_dict(data: dict) -> Inventory:
-    """Reconstruct an Inventory from a plain dict (e.g. loaded from JSON)."""
     def _bonus(d: dict | None) -> ItemBonus | None:
         if not d:
             return None

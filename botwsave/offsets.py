@@ -46,6 +46,14 @@ ITEM_TYPE_STASHABLE = 1466261872  # shields and most other stashable items
 ITEM_TYPE_ARMOR = 1098018159
 
 
+# Array bounds for construct-based flat parsing (generous upper bounds)
+MAX_INV_SLOTS    = 539   # (QUANTITIES_BASE - SLOTS_BASE) // SLOT_WIDTH
+MAX_WEAPON_BONUS = 120
+MAX_BOW_BONUS    = 30
+MAX_SHIELD_BONUS = 30
+MAX_FOOD_ITEMS   = 60
+
+
 _BONUS_TYPE_BASES = {
     "weapons": WEAPON_BONUS_TYPE_BASE,
     "bows": BOW_BONUS_TYPE_BASE,

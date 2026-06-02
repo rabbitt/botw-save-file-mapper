@@ -14,7 +14,6 @@ from typing import Any
 import construct as cs
 from ruamel.yaml import YAML
 
-from .binary import BinaryFile
 from .effectmap import EffectMap, DependencyGraph, DependencyResult
 from .codecs import (
     encode_time_of_day, decode_time_of_day,
@@ -23,6 +22,7 @@ from .codecs import (
 )
 from .inventory import Inventory, read_inventory, write_inventory, inventory_from_dict
 from ._layout import FLAT_LAYOUT, ENTITY_FIELD_INFO
+from . import offsets as O
 from .entities import (
     ShrineCollection,
     TowerCollection,
@@ -42,6 +42,64 @@ from .entities import (
     TownCollection,
     MasterSwordCollection,
 )
+
+
+def _populate_inventory_flat(fh, flat: "cs.Container") -> None:
+    """Read all inventory arrays into the shared flat dict via construct Pointer reads.
+
+    Uses the same fh that FLAT_LAYOUT just parsed — no extra open().
+    Every value lands at flat[f"off{absolute_offset}"], identical to the
+    effectmap entries, so the snapshot-comparison write-back in __exit__
+    covers inventory changes automatically.
+    """
+    ROW8  = cs.Struct("v" / cs.Int32ub, cs.Padding(4))
+    # 16 bytes per food entry: two uint32s separated by 4 bytes each
+    ROW16 = cs.Struct("v" / cs.Int32ub, cs.Padding(4), "w" / cs.Int32ub, cs.Padding(4))
+
+    # Slot entries: MAX_INV_SLOTS slots × SLOT_UINT32S uint32s, stride-8 each
+    slot_arr = cs.Pointer(O.SLOTS_BASE, cs.Array(O.MAX_INV_SLOTS * O.SLOT_UINT32S, ROW8)).parse_stream(fh)
+    for idx, row in enumerate(slot_arr):
+        slot, entry = divmod(idx, O.SLOT_UINT32S)
+        flat[f"off{O.SLOTS_BASE + slot * O.SLOT_WIDTH + entry * 8}"] = row.v
+
+    # Quantities and equipped flags (both stride-8 arrays of MAX_INV_SLOTS)
+    qty_arr = cs.Pointer(O.QUANTITIES_BASE, cs.Array(O.MAX_INV_SLOTS, ROW8)).parse_stream(fh)
+    for i, row in enumerate(qty_arr):
+        flat[f"off{O.QUANTITIES_BASE + i * O.QUANTITIES_WIDTH}"] = row.v
+
+    eq_arr = cs.Pointer(O.EQUIPPED_BASE, cs.Array(O.MAX_INV_SLOTS, ROW8)).parse_stream(fh)
+    for i, row in enumerate(eq_arr):
+        flat[f"off{O.EQUIPPED_BASE + i * O.EQUIPPED_WIDTH}"] = row.v
+
+    # Weapon / bow / shield bonus type + amount arrays (all stride-8)
+    for base, count in (
+        (O.WEAPON_BONUS_TYPE_BASE,   O.MAX_WEAPON_BONUS),
+        (O.WEAPON_BONUS_AMOUNT_BASE, O.MAX_WEAPON_BONUS),
+        (O.BOW_BONUS_TYPE_BASE,      O.MAX_BOW_BONUS),
+        (O.BOW_BONUS_AMOUNT_BASE,    O.MAX_BOW_BONUS),
+        (O.SHIELD_BONUS_TYPE_BASE,   O.MAX_SHIELD_BONUS),
+        (O.SHIELD_BONUS_AMOUNT_BASE, O.MAX_SHIELD_BONUS),
+    ):
+        arr = cs.Pointer(base, cs.Array(count, ROW8)).parse_stream(fh)
+        for i, row in enumerate(arr):
+            flat[f"off{base + i * O.BONUS_TYPE_WIDTH}"] = row.v
+
+    # Food arrays: two interleaved ROW16 arrays (hearts+duration, bonustype+amount)
+    # FOOD_HEARTS_BASE[i]      = hearts,      FOOD_DURATION_BASE[i]      = duration
+    # FOOD_BONUS_TYPE_BASE[i]  = bonus type,  FOOD_BONUS_AMOUNT_BASE[i]  = bonus amount
+    hd_arr = cs.Pointer(O.FOOD_HEARTS_BASE, cs.Array(O.MAX_FOOD_ITEMS, ROW16)).parse_stream(fh)
+    for i, row in enumerate(hd_arr):
+        flat[f"off{O.FOOD_HEARTS_BASE   + i * O.FOOD_WIDTH}"] = row.v
+        flat[f"off{O.FOOD_DURATION_BASE + i * O.FOOD_WIDTH}"] = row.w
+
+    ba_arr = cs.Pointer(O.FOOD_BONUS_TYPE_BASE, cs.Array(O.MAX_FOOD_ITEMS, ROW16)).parse_stream(fh)
+    for i, row in enumerate(ba_arr):
+        flat[f"off{O.FOOD_BONUS_TYPE_BASE   + i * O.FOOD_WIDTH}"] = row.v
+        flat[f"off{O.FOOD_BONUS_AMOUNT_BASE + i * O.FOOD_WIDTH}"] = row.w
+
+    # Stash size counters (one uint32 each)
+    for off in (O.WEAPON_STASH_OFFSET, O.BOW_STASH_OFFSET, O.SHIELD_STASH_OFFSET):
+        flat[f"off{off}"] = cs.Pointer(off, cs.Int32ub).parse_stream(fh)
 
 
 class FlagReadError(Exception):
@@ -73,7 +131,7 @@ class BloodMoon:
 
 @dataclass
 class Clock:
-    time: str = "08:00 AM"   # '08:00 AM' style
+    time: float = 120.0     # raw quarter-hour units (float32 stored in save)
     bloodmoon: BloodMoon = field(default_factory=BloodMoon)
 
 
@@ -170,10 +228,8 @@ class SaveFile:
         self._deps = DependencyGraph(self._effectmap)
         self.readonly = readonly or dry_run
         self.dry_run = dry_run
-        # _flat: the single parsed FLAT_LAYOUT container (all flag offsets).
+        # _flat: the single parsed container for all flag + inventory offsets.
         self._flat: cs.Container | None = None
-        # _binary: kept only for inventory I/O (array walking needs bytearray).
-        self._binary: BinaryFile | None = None
 
         # Proxy collection attributes (populated in __enter__)
         self.shrines: ShrineCollection | None = None
@@ -195,16 +251,11 @@ class SaveFile:
         self.mastersword: MasterSwordCollection | None = None
 
     def __enter__(self) -> "SaveFile":
-        # Parse flat layout (all flag offsets in one pass via Pointer seeks).
         with self.path.open('rb') as fh:
             self._flat = FLAT_LAYOUT.parse_stream(fh)
-        # Snapshot for change detection: only offsets whose value differs from
-        # the original file will be written back (surgical Pointer writes).
+            _populate_inventory_flat(fh, self._flat)
+        # Snapshot: only offsets whose value changed are written back on exit.
         self._flat_orig: dict = {k: v for k, v in self._flat.items() if not k.startswith('_')}
-
-        # BinaryFile is retained only for inventory reads/writes.
-        self._binary = BinaryFile(self.path, self._effectmap, readonly=self.readonly)
-        self._binary.__enter__()
 
         # Wire entity collections — all share the same _flat container.
         def _info(key: str) -> dict:
@@ -231,11 +282,6 @@ class SaveFile:
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb) -> None:
-        # Close BinaryFile first (flushes any in-flight inventory writes).
-        if self._binary is not None:
-            self._binary.__exit__(exc_type, exc_val, exc_tb)
-            self._binary = None
-
         # Write only the offsets whose value actually changed (surgical Pointer writes).
         if not self.readonly and not self.dry_run and self._flat is not None:
             changed = {
@@ -253,11 +299,6 @@ class SaveFile:
                     pass  # don't suppress the original exception
 
         self._flat = None
-
-    def _require_open(self) -> BinaryFile:
-        if self._binary is None:
-            raise RuntimeError("SaveFile not open — use as context manager")
-        return self._binary
 
     def _require_flat(self) -> cs.Container:
         if self._flat is None:
@@ -397,16 +438,16 @@ class SaveFile:
     def read_clock(self) -> Clock:
         g = self._get_flags("time.specific", "bloodmoon.counter", "bloodmoon.tonight.set")
         return Clock(
-            time=decode_time_of_day(g["time.specific"]),
+            time=g["time.specific"],         # raw float32 quarter-hours; preserves exact bits
             bloodmoon=BloodMoon(
-                counter=g["bloodmoon.counter"],  # raw float32 seconds; no HH:MM:SS conversion
+                counter=g["bloodmoon.counter"],  # raw float32 seconds; preserves exact bits
                 tonight=bool(g["bloodmoon.tonight.set"]),
             ),
         )
 
     def write_clock(self, clock: Clock) -> None:
-        self.set_flag("time.specific", encode_time_of_day(clock.time), unsafe=True)
-        # counter is raw float seconds; pass directly so float_to_bits preserves exact bits
+        # Pass raw floats directly — float_to_bits will reconstruct original bit patterns.
+        self.set_flag("time.specific", float(clock.time), unsafe=True)
         self.set_flag("bloodmoon.counter", float(clock.bloodmoon.counter), unsafe=True)
         kp = "bloodmoon.tonight.set" if clock.bloodmoon.tonight else "bloodmoon.tonight.unset"
         self.set_flag(kp, True, unsafe=True)
@@ -549,11 +590,11 @@ class SaveFile:
     # ------------------------------------------------------------------
 
     def read_inventory(self) -> Inventory:
-        return read_inventory(self._require_open())
+        return read_inventory(self._require_flat())
 
     def write_inventory(self, inv: Inventory) -> None:
         if not self.dry_run:
-            write_inventory(self._require_open(), inv)
+            write_inventory(self._require_flat(), inv)
 
     # ------------------------------------------------------------------
     # World map: towers, shrines, divine beasts — all effectmap flags
@@ -725,7 +766,7 @@ def _clock_from_dict(d: dict) -> Clock:
     else:
         counter = float(raw_counter)
     return Clock(
-        time=d.get("time", "08:00 AM"),
+        time=d.get("time", 120.0),
         bloodmoon=BloodMoon(counter=counter, tonight=bm.get("tonight", False)),
     )
 

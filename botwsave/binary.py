@@ -86,7 +86,10 @@ class BinaryFile:
 
     def write_uint32(self, offset: int, value: int) -> None:
         v = value & 0xFFFFFFFF
-        struct.pack_into(">I", self._require(), offset, v)
+        d = self._require()
+        if struct.unpack_from(">I", d, offset)[0] == v:
+            return  # no change — preserve exact original bytes
+        struct.pack_into(">I", d, offset, v)
         if self._fh is not None:
             cs.Pointer(offset, cs.Int32ub).build_stream(v, self._fh)
 

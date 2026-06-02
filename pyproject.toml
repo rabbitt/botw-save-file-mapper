@@ -13,7 +13,7 @@ dependencies = [
 ]
 
 [project.scripts]
-botwsave = "botwsave._cli:main"
+botwsave = "botwsave.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["."]

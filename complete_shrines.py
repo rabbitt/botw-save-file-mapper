@@ -23,8 +23,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 
-from botwsave import SaveFile, EffectMap, DependencyGraph
-from botwsave._effectmap import DependencyResult
+from botwsave import SaveFile, EffectMap, DependencyGraph, DependencyResult
 
 
 # Keys that definitively mark a shrine as non-simple

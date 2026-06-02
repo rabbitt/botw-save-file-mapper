@@ -12,3 +12,4 @@ config.yaml
 botwsave/__pycache__/
 botw_mapper/
 *.egg-info/
+tools/__pycache__/

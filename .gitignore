@@ -10,3 +10,4 @@ export
 *.test.sav
 botwsave/__pycache__/
 botw_mapper/
+*.egg-info/

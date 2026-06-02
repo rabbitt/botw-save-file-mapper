@@ -67,7 +67,7 @@ class Stats:
 
 @dataclass
 class BloodMoon:
-    counter: str = "00:00"   # 'HH:MM:SS' or 'MM:SS'
+    counter: float = 0.0   # raw seconds (float32 stored in save)
     tonight: bool = False
 
 
@@ -198,6 +198,9 @@ class SaveFile:
         # Parse flat layout (all flag offsets in one pass via Pointer seeks).
         with self.path.open('rb') as fh:
             self._flat = FLAT_LAYOUT.parse_stream(fh)
+        # Snapshot for change detection: only offsets whose value differs from
+        # the original file will be written back (surgical Pointer writes).
+        self._flat_orig: dict = {k: v for k, v in self._flat.items() if not k.startswith('_')}
 
         # BinaryFile is retained only for inventory reads/writes.
         self._binary = BinaryFile(self.path, self._effectmap, readonly=self.readonly)
@@ -233,13 +236,21 @@ class SaveFile:
             self._binary.__exit__(exc_type, exc_val, exc_tb)
             self._binary = None
 
-        # Flush all flag mutations to disk in one build_stream pass.
+        # Write only the offsets whose value actually changed (surgical Pointer writes).
         if not self.readonly and not self.dry_run and self._flat is not None:
-            try:
-                with self.path.open('r+b') as fh:
-                    FLAT_LAYOUT.build_stream(self._flat, fh)
-            except Exception:
-                pass  # don't suppress the original exception
+            changed = {
+                key: val
+                for key, val in self._flat.items()
+                if not key.startswith('_') and val != self._flat_orig.get(key)
+            }
+            if changed:
+                try:
+                    with self.path.open('r+b') as fh:
+                        for key, val in changed.items():
+                            offset = int(key[3:])  # "off{offset}" → offset
+                            cs.Pointer(offset, cs.Int32ub).build_stream(val, fh)
+                except Exception:
+                    pass  # don't suppress the original exception
 
         self._flat = None
 
@@ -302,20 +313,26 @@ class SaveFile:
             raise FlagWriteError(f"Unknown keypath: {keypath!r}")
         if not node.entries:
             return
+        # For bool keypaths: check primary entry (entries[0]) first.
+        # Only write any entry if the primary needs to change.  This preserves
+        # secondary entries the game left in inconsistent states (e.g. shrine-quest
+        # secondaries at 0 even when the quest is complete).
+        if node.entries and isinstance(node.entries[0].value, bool):
+            desired = bool(value)
+            primary = node.entries[0]
+            primary_raw = flat[f"off{primary.offset}"]
+            primary_logical = bool(primary_raw) if primary.value else (primary_raw == 0)
+            if primary_logical != desired:
+                for entry in node.entries:
+                    if entry.value:
+                        flat[f"off{entry.offset}"] = 1 if desired else 0
+                    else:
+                        flat[f"off{entry.offset}"] = 0 if desired else 1
+            return
+
         for entry in node.entries:
             key = f"off{entry.offset}"
-            if isinstance(entry.value, bool):
-                # Preserve the game's non-1 truthy raw values (2/3/5/0xa/…).
-                current = flat[key]
-                desired = bool(value)
-                current_logical = bool(current) if entry.value else (current == 0)
-                if current_logical == desired:
-                    continue
-                if entry.value:
-                    flat[key] = 1 if desired else 0
-                else:
-                    flat[key] = 0 if desired else 1
-            elif entry.value == "float":
+            if entry.value == "float":
                 flat[key] = float_to_bits(float(value))
             elif entry.value == "integer":
                 flat[key] = int(value)
@@ -382,14 +399,15 @@ class SaveFile:
         return Clock(
             time=decode_time_of_day(g["time.specific"]),
             bloodmoon=BloodMoon(
-                counter=decode_hms(g["bloodmoon.counter"]),
+                counter=g["bloodmoon.counter"],  # raw float32 seconds; no HH:MM:SS conversion
                 tonight=bool(g["bloodmoon.tonight.set"]),
             ),
         )
 
     def write_clock(self, clock: Clock) -> None:
         self.set_flag("time.specific", encode_time_of_day(clock.time), unsafe=True)
-        self.set_flag("bloodmoon.counter", encode_hms(clock.bloodmoon.counter), unsafe=True)
+        # counter is raw float seconds; pass directly so float_to_bits preserves exact bits
+        self.set_flag("bloodmoon.counter", float(clock.bloodmoon.counter), unsafe=True)
         kp = "bloodmoon.tonight.set" if clock.bloodmoon.tonight else "bloodmoon.tonight.unset"
         self.set_flag(kp, True, unsafe=True)
 
@@ -700,12 +718,15 @@ def _stats_from_dict(d: dict) -> Stats:
 
 def _clock_from_dict(d: dict) -> Clock:
     bm = d.get("bloodmoon", {})
+    raw_counter = bm.get("counter", 0.0)
+    if isinstance(raw_counter, str):
+        # Legacy YAML exports used HH:MM:SS; convert to seconds.
+        counter = float(encode_hms(raw_counter))
+    else:
+        counter = float(raw_counter)
     return Clock(
         time=d.get("time", "08:00 AM"),
-        bloodmoon=BloodMoon(
-            counter=bm.get("counter", "00:00"),
-            tonight=bm.get("tonight", False),
-        ),
+        bloodmoon=BloodMoon(counter=counter, tonight=bm.get("tonight", False)),
     )
 
 

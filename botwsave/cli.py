@@ -191,7 +191,11 @@ def clock_cmd(ctx: click.Context) -> None:
     with _open_save(ctx, readonly=True) as save:
         c = save.read_clock()
         click.echo(f"Time:              {c.time}")
-        click.echo(f"Blood moon timer:  {c.bloodmoon.counter}")
+        secs = c.bloodmoon.counter
+        h, rem = divmod(int(secs), 3600)
+        m, s = divmod(rem, 60)
+        counter_str = f"{h:02d}:{m:02d}:{s:02d}" if h else f"{m:02d}:{s:02d}"
+        click.echo(f"Blood moon timer:  {counter_str} ({secs:.3f}s)")
         click.echo(f"Blood moon tonight: {c.bloodmoon.tonight}")
 
 

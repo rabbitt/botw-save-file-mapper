@@ -9,3 +9,4 @@ export
 *.txt
 *.test.sav
 botwsave/__pycache__/
+botw_mapper/

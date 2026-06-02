@@ -308,6 +308,15 @@ class SaveFile:
             if isinstance(entry.value, bool):
                 # entry.value=True  → "active" means write 1 (normal)
                 # entry.value=False → "active" means write 0 (inverse)
+                #
+                # Skip the write when the current raw value is already at the
+                # desired logical state (game sometimes writes 2/3/5/etc. for
+                # "true"; we preserve that rather than normalising to 1).
+                current_raw = bf.read_uint32(entry.offset)
+                desired = bool(value)
+                current = bool(current_raw) if entry.value else (current_raw == 0)
+                if current == desired:
+                    continue
                 if entry.value:
                     bf.write_uint32(entry.offset, 1 if value else 0)
                 else:
@@ -321,7 +330,13 @@ class SaveFile:
             elif entry.value == "utf8":
                 bf.write_utf8(entry.offset, str(value), entry.length or 64)
             else:
-                bf.write_uint32(entry.offset, int(value))
+                # Integer-literal entries (enum sentinels etc.): skip if same
+                # logical state so game-specific non-1 truthy values are preserved.
+                current_raw = bf.read_uint32(entry.offset)
+                desired_int = int(value)
+                if bool(desired_int) == bool(current_raw):
+                    continue
+                bf.write_uint32(entry.offset, desired_int)
 
     def check_safe(self, keypath: str, *, include_soft: bool = True) -> DependencyResult:
         return self._deps.check_safe(keypath, include_soft=include_soft)

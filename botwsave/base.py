@@ -63,7 +63,13 @@ class EntityProxy:
             encoded = str(value).encode('utf-8', errors='replace')[:length]
             c[name] = encoded + b'\x00' * (length - len(encoded))
         else:
-            c[name] = int(value)
+            existing = c[name]
+            new_int = int(value)
+            # Preserve the game's exact raw value when the logical state is already
+            # correct (game sometimes writes 2, 3, 5, 0xa, etc. for "true").
+            if isinstance(existing, int) and bool(new_int) == bool(existing):
+                return
+            c[name] = new_int
 
     def to_dict(self) -> dict:
         return {f: getattr(self, f) for f in self._fields}

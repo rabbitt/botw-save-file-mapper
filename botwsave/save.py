@@ -56,6 +56,14 @@ def _populate_inventory_flat(fh, flat: "cs.Container") -> None:
     # 16 bytes per food entry: two uint32s separated by 4 bytes each
     ROW16 = cs.Struct("v" / cs.Int32ub, cs.Padding(4), "w" / cs.Int32ub, cs.Padding(4))
 
+    # Read stash size counters first — they determine how large the bonus arrays are.
+    weapon_stash = cs.Pointer(O.WEAPON_STASH_OFFSET, cs.Int32ub).parse_stream(fh)
+    bow_stash    = cs.Pointer(O.BOW_STASH_OFFSET,    cs.Int32ub).parse_stream(fh)
+    shield_stash = cs.Pointer(O.SHIELD_STASH_OFFSET, cs.Int32ub).parse_stream(fh)
+    flat[f"off{O.WEAPON_STASH_OFFSET}"] = weapon_stash
+    flat[f"off{O.BOW_STASH_OFFSET}"]    = bow_stash
+    flat[f"off{O.SHIELD_STASH_OFFSET}"] = shield_stash
+
     # Slot entries: MAX_INV_SLOTS slots × SLOT_UINT32S uint32s, stride-8 each
     slot_arr = cs.Pointer(O.SLOTS_BASE, cs.Array(O.MAX_INV_SLOTS * O.SLOT_UINT32S, ROW8)).parse_stream(fh)
     for idx, row in enumerate(slot_arr):
@@ -71,15 +79,18 @@ def _populate_inventory_flat(fh, flat: "cs.Container") -> None:
     for i, row in enumerate(eq_arr):
         flat[f"off{O.EQUIPPED_BASE + i * O.EQUIPPED_WIDTH}"] = row.v
 
-    # Weapon / bow / shield bonus type + amount arrays (all stride-8)
+    # Weapon / bow / shield bonus type + amount arrays.
+    # Each bonus array has exactly stash_size entries — one per stash slot.
     for base, count in (
-        (O.WEAPON_BONUS_TYPE_BASE,   O.MAX_WEAPON_BONUS),
-        (O.WEAPON_BONUS_AMOUNT_BASE, O.MAX_WEAPON_BONUS),
-        (O.BOW_BONUS_TYPE_BASE,      O.MAX_BOW_BONUS),
-        (O.BOW_BONUS_AMOUNT_BASE,    O.MAX_BOW_BONUS),
-        (O.SHIELD_BONUS_TYPE_BASE,   O.MAX_SHIELD_BONUS),
-        (O.SHIELD_BONUS_AMOUNT_BASE, O.MAX_SHIELD_BONUS),
+        (O.WEAPON_BONUS_TYPE_BASE,   weapon_stash),
+        (O.WEAPON_BONUS_AMOUNT_BASE, weapon_stash),
+        (O.BOW_BONUS_TYPE_BASE,      bow_stash),
+        (O.BOW_BONUS_AMOUNT_BASE,    bow_stash),
+        (O.SHIELD_BONUS_TYPE_BASE,   shield_stash),
+        (O.SHIELD_BONUS_AMOUNT_BASE, shield_stash),
     ):
+        if count == 0:
+            continue
         arr = cs.Pointer(base, cs.Array(count, ROW8)).parse_stream(fh)
         for i, row in enumerate(arr):
             flat[f"off{base + i * O.BONUS_TYPE_WIDTH}"] = row.v
@@ -96,10 +107,6 @@ def _populate_inventory_flat(fh, flat: "cs.Container") -> None:
     for i, row in enumerate(ba_arr):
         flat[f"off{O.FOOD_BONUS_TYPE_BASE   + i * O.FOOD_WIDTH}"] = row.v
         flat[f"off{O.FOOD_BONUS_AMOUNT_BASE + i * O.FOOD_WIDTH}"] = row.w
-
-    # Stash size counters (one uint32 each)
-    for off in (O.WEAPON_STASH_OFFSET, O.BOW_STASH_OFFSET, O.SHIELD_STASH_OFFSET):
-        flat[f"off{off}"] = cs.Pointer(off, cs.Int32ub).parse_stream(fh)
 
 
 class FlagReadError(Exception):

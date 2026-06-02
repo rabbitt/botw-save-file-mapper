@@ -46,12 +46,14 @@ ITEM_TYPE_STASHABLE = 1466261872  # shields and most other stashable items
 ITEM_TYPE_ARMOR = 1098018159
 
 
-# Array bounds for construct-based flat parsing (generous upper bounds)
-MAX_INV_SLOTS    = 539   # (QUANTITIES_BASE - SLOTS_BASE) // SLOT_WIDTH
-MAX_WEAPON_BONUS = 120
-MAX_BOW_BONUS    = 30
-MAX_SHIELD_BONUS = 30
-MAX_FOOD_ITEMS   = 60
+# Array bounds for construct-based flat parsing.
+# MAX_INV_SLOTS: conservative upper bound covering all item categories;
+#   item detection stops at the first slot that doesn't match the catalog.
+# Weapon/bow/shield bonus array sizes are NOT hardcoded — they equal the
+#   per-category stash counters read live from the file (WEAPON_STASH_OFFSET etc.)
+#   which reflect actual Hestu upgrades, so they're always exact.
+MAX_INV_SLOTS  = 420   # vanilla max is ~393; 420 gives headroom
+MAX_FOOD_ITEMS = 60    # fixed game limit for food/elixir slots
 
 
 _BONUS_TYPE_BASES = {

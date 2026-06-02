@@ -7,4 +7,5 @@ temp
 mapfiles/offsetmap.json
 export
 *.txt
-*.test.savbotwsave/__pycache__/
+*.test.sav
+botwsave/__pycache__/

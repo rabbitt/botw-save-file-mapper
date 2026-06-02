@@ -642,7 +642,11 @@ def _write_armor(flat: dict, inv: Inventory, first_slot: int) -> int:
         slot = first_slot + i
         _write_slot_entries(flat, slot, write_entries_for(item.name, "armor"))
         _w(flat, O.equipped_offset(slot), 1 if item.equipped else 0)
-        _w(flat, O.quantity_offset(slot), _DYE_ENCODE.get(item.color, 0))
+        # Only write dye if the effective color changed. Preserves raw values
+        # (e.g. 0xFFFFFFFF) that decode as "original" but must not be overwritten with 0.
+        current_raw = _r(flat, O.quantity_offset(slot))
+        if _DYE_DECODE.get(current_raw, "original") != item.color:
+            _w(flat, O.quantity_offset(slot), _DYE_ENCODE.get(item.color, 0))
     return first_slot + len(items)
 
 

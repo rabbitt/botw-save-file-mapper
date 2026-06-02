@@ -1,16 +1,17 @@
 """SaveFile: unified read/write API over the BotW Wii U binary save file.
 
 Covers individual flags (get_flag/set_flag), model-level reads (read_stats,
-read_inventory, etc.), and full-save JSON export/import — all without the
+read_inventory, etc.), and full-save YAML export/import — all without the
 soft-dependency cascade that corrupts the Node tool's import-json path.
 """
 
 from __future__ import annotations
 
-import json
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
+
+from ruamel.yaml import YAML
 
 from .binary import BinaryFile
 from .effectmap import EffectMap, DependencyGraph, DependencyResult
@@ -462,8 +463,8 @@ class SaveFile:
     # Full save export / import
     # ------------------------------------------------------------------
 
-    def export_json(self, output: str | Path | None = None) -> dict:
-        """Export the full save to a dict (and optionally write to a JSON file)."""
+    def export_yaml(self, output: str | Path | None = None) -> dict:
+        """Export the full save to a dict (and optionally write to a YAML file)."""
         data = {
             "inventory": self.read_inventory().to_dict(),
             "stats": _dataclass_to_dict(self.read_stats()),
@@ -475,13 +476,17 @@ class SaveFile:
             "adventurelog": self.read_adventure_log(),
         }
         if output:
-            Path(output).write_text(json.dumps(data, indent=2, default=str))
+            yaml = YAML()
+            yaml.default_flow_style = False
+            with Path(output).open("w") as f:
+                yaml.dump(data, f)
         return data
 
-    def import_json(self, source: str | Path | dict) -> None:
-        """Import a save JSON. Writes only the exact offsets specified — no cascade."""
+    def import_yaml(self, source: str | Path | dict) -> None:
+        """Import a save YAML. Writes only the exact offsets specified — no cascade."""
         if isinstance(source, (str, Path)):
-            data = json.loads(Path(source).read_text())
+            yaml = YAML()
+            data = yaml.load(Path(source).read_text())
         else:
             data = source
 

@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-import json
 import sys
 from pathlib import Path
 
 import click
+from ruamel.yaml import YAML
 
 from .effectmap import EffectMap
 from .save import SaveFile, FlagReadError, FlagWriteError
@@ -196,38 +196,40 @@ def clock_cmd(ctx: click.Context) -> None:
 
 
 # ---------------------------------------------------------------------------
-# JSON export / import
+# YAML export / import
 # ---------------------------------------------------------------------------
 
 @cli.command("export")
 @click.argument("output", required=False)
 @click.pass_context
 def export_cmd(ctx: click.Context, output: str | None) -> None:
-    """Export the full save to JSON.
+    """Export the full save to YAML.
 
     \b
     OUTPUT: destination path (default: stdout)
     """
     with _open_save(ctx, readonly=True) as save:
-        data = save.export_json()
+        data = save.export_yaml()
         if output:
-            Path(output).write_text(json.dumps(data, indent=2, default=str))
+            save.export_yaml(output)
             click.echo(f"Exported to {output}")
         else:
-            click.echo(json.dumps(data, indent=2, default=str))
+            yaml = YAML()
+            yaml.default_flow_style = False
+            yaml.dump(data, sys.stdout)
 
 
 @cli.command("import")
 @click.argument("input_file")
 @click.pass_context
 def import_cmd(ctx: click.Context, input_file: str) -> None:
-    """Import a save JSON (no soft-dependency cascade).
+    """Import a save YAML (no soft-dependency cascade).
 
     \b
-    INPUT_FILE: path to JSON exported by 'botwsave export'
+    INPUT_FILE: path to YAML exported by 'botwsave export'
     """
     with _open_save(ctx) as save:
-        save.import_json(input_file)
+        save.import_yaml(input_file)
         action = "Would import" if save.dry_run else "Imported"
         click.echo(f"{action}: {input_file}")
 

@@ -52,9 +52,9 @@ def encode_time_of_day(time_str: str) -> int:
     return round((h * 60 + m) / 4.0)
 
 
-def decode_time_of_day(value: int) -> str:
+def decode_time_of_day(value: int | float) -> str:
     """Convert the quarter-hour integer to '08:00 AM' style string."""
-    raw_minutes = value * 4
+    raw_minutes = int(value) * 4
     minutes = round((raw_minutes % 60 - 1) / 5) * 5 if raw_minutes % 60 else 0
     raw_hours = raw_minutes // 60
     if raw_hours == 12:

@@ -1,0 +1,9 @@
+repos:
+  - repo: local
+    hooks:
+      - id: gen-layout
+        name: Regenerate _layout.py from effectmap.yaml
+        language: system
+        entry: python tools/gen_layout.py
+        files: ^botwsave/data/effectmap\.yaml$
+        pass_filenames: false

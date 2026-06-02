@@ -336,6 +336,43 @@ def main() -> None:
     output_parts.append("}")
     output_parts.append("")
 
+    # Compatibility aliases: SHRINE_LAYOUT / SHRINE_NAMES, TOWER_LAYOUT / TOWER_NAMES, etc.
+    # (singular / short form for use by entities.py and external callers)
+    SINGULAR_MAP = {
+        "shrines":        "SHRINE",
+        "towers":         "TOWER",
+        "memories":       "MEMORY",
+        "divinebeasts":   "DIVINEBEAST",
+        "fairyfountains": "FAIRYFOUNTAIN",
+        "ancienttechlabs":"ANCIENTTECHLAB",
+        "cutscenes":      "CUTSCENE",
+        "horses":         "HORSE",
+        "npcs":           "NPC",
+        "runes":          "RUNE",
+        "sheikahslate":   "SHEIKAHSLATE",
+        "quicktips":      "QUICKTIP",
+        "sidequests":     "SIDEQUEST",
+        "mainquests":     "MAINQUEST",
+        "championpowers": "CHAMPIONPOWER",
+        "towns":          "TOWN",
+        "mastersword":    "MASTERSWORD",
+    }
+    output_parts.append("# ── Compatibility aliases (singular / short form) " + "─" * 28)
+    output_parts.append("")
+    for section_key, _section_label in SECTIONS_TO_EMIT:
+        if section_key not in summary:
+            continue
+        prefix = section_key.upper().replace(".", "_")  # e.g. SHRINES
+        layout_var = f"{prefix}_LAYOUT"
+        names_var = f"{prefix}_NAMES"
+        short = SINGULAR_MAP.get(section_key, prefix)
+        if short != prefix:
+            short_layout = f"{short}_LAYOUT"
+            short_names  = f"{short}_NAMES"
+            output_parts.append(f"{short_layout} = {layout_var}")
+            output_parts.append(f"{short_names}: list[str] = {names_var}")
+    output_parts.append("")
+
     content = "\n".join(output_parts)
     OUTPUT_PATH.write_text(content)
 

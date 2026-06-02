@@ -11,6 +11,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
+import construct as cs
 from ruamel.yaml import YAML
 
 from .binary import BinaryFile
@@ -20,6 +21,26 @@ from .codecs import (
     encode_hms, decode_hms,
 )
 from .inventory import Inventory, read_inventory, write_inventory, inventory_from_dict
+from ._layout import LAYOUTS
+from .entities import (
+    ShrineCollection,
+    TowerCollection,
+    MemoryCollection,
+    DivineBeastCollection,
+    FairyFountainCollection,
+    AncientTechLabCollection,
+    CutsceneCollection,
+    HorseCollection,
+    NpcCollection,
+    RuneCollection,
+    SheikahSlateCollection,
+    QuickTipCollection,
+    SideQuestCollection,
+    MainQuestCollection,
+    ChampionPowerCollection,
+    TownCollection,
+    MasterSwordCollection,
+)
 
 
 class FlagReadError(Exception):
@@ -149,16 +170,85 @@ class SaveFile:
         self.readonly = readonly or dry_run
         self.dry_run = dry_run
         self._binary: BinaryFile | None = None
+        self._construct_containers: dict = {}
+
+        # Proxy collection attributes (populated in __enter__)
+        self.shrines: ShrineCollection | None = None
+        self.towers: TowerCollection | None = None
+        self.memories: MemoryCollection | None = None
+        self.divinebeasts: DivineBeastCollection | None = None
+        self.fairyfountains: FairyFountainCollection | None = None
+        self.ancienttechlabs: AncientTechLabCollection | None = None
+        self.cutscenes: CutsceneCollection | None = None
+        self.horses: HorseCollection | None = None
+        self.npcs: NpcCollection | None = None
+        self.runes_collection: RuneCollection | None = None
+        self.sheikahslate_collection: SheikahSlateCollection | None = None
+        self.quicktips: QuickTipCollection | None = None
+        self.sidequests: SideQuestCollection | None = None
+        self.mainquests: MainQuestCollection | None = None
+        self.championpowers: ChampionPowerCollection | None = None
+        self.towns: TownCollection | None = None
+        self.mastersword: MasterSwordCollection | None = None
 
     def __enter__(self) -> "SaveFile":
         self._binary = BinaryFile(self.path, self._effectmap, readonly=self.readonly)
         self._binary.__enter__()
+
+        # Parse all LAYOUTS sections via a separate read handle.
+        # (parse_stream uses Pointer seeks so it needs its own file handle.)
+        _parse_fh = self.path.open('rb')
+        try:
+            for section_key, layout in LAYOUTS.items():
+                try:
+                    self._construct_containers[section_key] = layout.parse_stream(_parse_fh)
+                except Exception:
+                    pass  # skip sections that fail to parse (e.g. truncated file)
+        finally:
+            _parse_fh.close()
+
+        # Wire up entity collections (handle missing sections gracefully)
+        def _container(key: str) -> cs.Container:
+            return self._construct_containers.get(key, cs.Container())
+
+        self.shrines       = ShrineCollection(_container("shrines"))
+        self.towers        = TowerCollection(_container("towers"))
+        self.memories      = MemoryCollection(_container("memories"))
+        self.divinebeasts  = DivineBeastCollection(_container("divinebeasts"))
+        self.fairyfountains = FairyFountainCollection(_container("fairyfountains"))
+        self.ancienttechlabs = AncientTechLabCollection(_container("ancienttechlabs"))
+        self.cutscenes     = CutsceneCollection(_container("cutscenes"))
+        self.horses        = HorseCollection(_container("horses"))
+        self.npcs          = NpcCollection(_container("npcs"))
+        self.runes_collection   = RuneCollection(_container("runes"))
+        self.sheikahslate_collection = SheikahSlateCollection(_container("sheikahslate"))
+        self.quicktips     = QuickTipCollection(_container("quicktips"))
+        self.sidequests    = SideQuestCollection(_container("sidequests"))
+        self.mainquests    = MainQuestCollection(_container("mainquests"))
+        self.championpowers = ChampionPowerCollection(_container("championpowers"))
+        self.towns         = TownCollection(_container("towns"))
+        self.mastersword   = MasterSwordCollection(_container("mastersword"))
+
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb) -> None:
         if self._binary is not None:
             self._binary.__exit__(exc_type, exc_val, exc_tb)
             self._binary = None
+
+        # Flush construct containers AFTER BinaryFile's writes so that construct
+        # writes overwrite the same offsets with the (same) container values.
+        if not self.readonly and not self.dry_run and self._construct_containers:
+            try:
+                with self.path.open('r+b') as fh:
+                    for section_key, layout in LAYOUTS.items():
+                        if section_key in self._construct_containers:
+                            try:
+                                layout.build_stream(self._construct_containers[section_key], fh)
+                            except Exception:
+                                pass  # skip sections that fail to build
+            except Exception:
+                pass  # don't suppress the original exception
 
     def _require_open(self) -> BinaryFile:
         if self._binary is None:
@@ -467,6 +557,16 @@ class SaveFile:
 
     def export_yaml(self, output: str | Path | None = None) -> dict:
         """Export the full save to a dict (and optionally write to a YAML file)."""
+        # Build the map section from proxy collections when available
+        map_section: dict = {}
+        for section_name in ("shrines", "towers", "divinebeasts", "ancienttechlabs"):
+            collection = getattr(self, section_name, None)
+            if collection is not None:
+                map_section[section_name] = collection.to_dict()
+        # Fall back to read_worldmap() if no collections are available
+        if not map_section:
+            map_section = self.read_worldmap()
+
         data = {
             "inventory": self.read_inventory().to_dict(),
             "stats": _dataclass_to_dict(self.read_stats()),
@@ -474,7 +574,7 @@ class SaveFile:
             "runes": _dataclass_to_dict(self.read_runes()),
             "fairyfountains": _dataclass_to_dict(self.read_fairy_fountains()),
             "horses": _dataclass_to_dict(self.read_horses()),
-            "map": self.read_worldmap(),
+            "map": map_section,
             "adventurelog": self.read_adventure_log(),
         }
         if output:
@@ -505,7 +605,21 @@ class SaveFile:
         if "horses" in data:
             self.write_horses(_horses_from_dict(data["horses"]))
         if "map" in data:
-            self.write_worldmap(data["map"])
+            for section_name, section_data in data["map"].items():
+                collection = getattr(self, section_name, None)
+                if collection is None or not isinstance(section_data, dict):
+                    # Fall back to old subtree writer for sections not wired as collections
+                    self._write_subtree_flags({section_name: section_data})
+                    continue
+                for entity_name, fields in section_data.items():
+                    if entity_name not in collection or not isinstance(fields, dict):
+                        continue
+                    proxy = collection[entity_name]
+                    for field_name, value in fields.items():
+                        try:
+                            setattr(proxy, field_name, value)
+                        except (AttributeError, NotImplementedError):
+                            pass
         if "adventurelog" in data:
             self.write_adventure_log(data["adventurelog"])
 

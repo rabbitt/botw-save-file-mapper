@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.backends.legacy:build"
+
+[project]
+name = "botwsave"
+version = "0.1.0"
+description = "BotW Wii U save file reader/writer with dependency graph transparency"
+requires-python = ">=3.10"
+dependencies = [
+    "ruamel.yaml>=0.18",
+    "click>=8.0",
+]
+
+[project.scripts]
+botwsave = "botwsave._cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["botwsave*"]
+
+[tool.setuptools.package-data]
+botwsave = ["data/*.yaml"]

@@ -1,0 +1,536 @@
+ancientbridle:
+  entries:
+  - offset: 0
+    value: 1197567333
+  - offset: 8
+    value: 1383034184
+  - offset: 16
+    value: 1869771621
+  - offset: 24
+    value: 1382377838
+  - offset: 32
+    value: 1935618352
+  stackable: false
+  unique: true
+ancientsaddle:
+  entries:
+  - offset: 0
+    value: 1197567333
+  - offset: 8
+    value: 1383034184
+  - offset: 16
+    value: 1869771621
+  - offset: 24
+    value: 1398891620
+  - offset: 32
+    value: 1818582833
+  - offset: 40
+    value: 805306368
+  stackable: false
+  unique: true
+classifiedenvelope:
+  entries:
+  - offset: 0
+    value: 1331849823
+  - offset: 8
+    value: 1349676911
+  - offset: 16
+    value: 1715629935
+  - offset: 24
+    value: 1795162112
+  stackable: false
+  unique: true
+daruksprotection:
+  entries:
+  - offset: 0
+    value: 1331849823
+  - offset: 8
+    value: 1214607983
+  - offset: 16
+    value: 1399813484
+  - offset: 24
+    value: 1598517106
+  - offset: 32
+    value: 1869479936
+  stackable: false
+  unique: true
+daruksprotectionplus:
+  entries:
+  - offset: 0
+    value: 1331849823
+  - offset: 8
+    value: 1145848671
+  - offset: 16
+    value: 1214607983
+  - offset: 24
+    value: 1399813484
+  - offset: 32
+    value: 1598517106
+  - offset: 40
+    value: 1869479936
+  stackable: false
+  unique: true
+extravagantbridle:
+  entries:
+  - offset: 0
+    value: 1197567333
+  - offset: 8
+    value: 1383034184
+  - offset: 16
+    value: 1869771621
+  - offset: 24
+    value: 1382377838
+  - offset: 32
+    value: 1935618101
+  stackable: false
+  unique: true
+extravagantsaddle:
+  entries:
+  - offset: 0
+    value: 1197567333
+  - offset: 8
+    value: 1383034184
+  - offset: 16
+    value: 1869771621
+  - offset: 24
+    value: 1398891620
+  - offset: 32
+    value: 1818582832
+  - offset: 40
+    value: 889192448
+  stackable: false
+  unique: true
+hestusgift:
+  entries:
+  - offset: 0
+    value: 1331849823
+  - offset: 8
+    value: 1349676911
+  - offset: 16
+    value: 1716219762
+  - offset: 24
+    value: 1869283328
+  stackable: false
+  unique: true
+hestusmaracas:
+  entries:
+  - offset: 0
+    value: 1331849823
+  - offset: 8
+    value: 1298231905
+  - offset: 16
+    value: 1667330816
+  stackable: false
+  unique: true
+knightsbridle:
+  entries:
+  - offset: 0
+    value: 1197567333
+  - offset: 8
+    value: 1383034184
+  - offset: 16
+    value: 1869771621
+  - offset: 24
+    value: 1382377838
+  - offset: 32
+    value: 1935618099
+  stackable: false
+  unique: true
+knightssaddle:
+  entries:
+  - offset: 0
+    value: 1197567333
+  - offset: 8
+    value: 1383034184
+  - offset: 16
+    value: 1869771621
+  - offset: 24
+    value: 1398891620
+  - offset: 32
+    value: 1818582832
+  - offset: 40
+    value: 855638016
+  stackable: false
+  unique: true
+korokseed:
+  entries:
+  - offset: 0
+    value: 1331849823
+  - offset: 8
+    value: 1265594991
+  - offset: 16
+    value: 1800303988
+  - offset: 24
+    value: 1929379840
+  stackable: true
+  unique: false
+medalofhonorhinox:
+  entries:
+  - offset: 0
+    value: 1331849823
+  - offset: 8
+    value: 1349676911
+  - offset: 16
+    value: 1715956065
+  - offset: 24
+    value: 1853115241
+  - offset: 32
+    value: 1819043186
+  stackable: false
+  unique: true
+medalofhonormolduga:
+  entries:
+  - offset: 0
+    value: 1331849823
+  - offset: 8
+    value: 1349676911
+  - offset: 16
+    value: 1716740462
+  - offset: 24
+    value: 1685548914
+  - offset: 32
+    value: 1833658732
+  - offset: 40
+    value: 1818587648
+  stackable: false
+  unique: true
+medalofhonortalus:
+  entries:
+  - offset: 0
+    value: 1331849823
+  - offset: 8
+    value: 1349676911
+  - offset: 16
+    value: 1715957612
+  - offset: 24
+    value: 1701661545
+  - offset: 32
+    value: 1819043186
+  stackable: false
+  unique: true
+medohsemblem:
+  entries:
+  - offset: 0
+    value: 1331849823
+  - offset: 8
+    value: 1145848671
+  - offset: 16
+    value: 1214607983
+  - offset: 24
+    value: 1399153004
+  - offset: 32
+    value: 1599236468
+  - offset: 40
+    value: 1862270976
+  stackable: true
+  unique: false
+miphasgrace:
+  entries:
+  - offset: 0
+    value: 1331849823
+  - offset: 8
+    value: 1214607983
+  - offset: 16
+    value: 1399813484
+  - offset: 24
+    value: 1599762290
+  - offset: 32
+    value: 1627389952
+  stackable: false
+  unique: true
+miphasgraceplus:
+  entries:
+  - offset: 0
+    value: 1331849823
+  - offset: 8
+    value: 1145848671
+  - offset: 16
+    value: 1214607983
+  - offset: 24
+    value: 1399813484
+  - offset: 32
+    value: 1599762290
+  - offset: 40
+    value: 1627389952
+  stackable: false
+  unique: true
+monsterbridle:
+  entries:
+  - offset: 0
+    value: 1197567333
+  - offset: 8
+    value: 1383034184
+  - offset: 16
+    value: 1869771621
+  - offset: 24
+    value: 1382377838
+  - offset: 32
+    value: 1935618100
+  stackable: false
+  unique: true
+monstersaddle:
+  entries:
+  - offset: 0
+    value: 1197567333
+  - offset: 8
+    value: 1383034184
+  - offset: 16
+    value: 1869771621
+  - offset: 24
+    value: 1398891620
+  - offset: 32
+    value: 1818582832
+  - offset: 40
+    value: 872415232
+  stackable: false
+  unique: true
+naborissemblem:
+  entries:
+  - offset: 0
+    value: 1331849823
+  - offset: 8
+    value: 1145848671
+  - offset: 16
+    value: 1214607983
+  - offset: 24
+    value: 1399153004
+  - offset: 32
+    value: 1598514546
+  - offset: 40
+    value: 1969516288
+  stackable: true
+  unique: false
+paraglider:
+  entries:
+  - offset: 0
+    value: 1349280121
+  - offset: 8
+    value: 1701991284
+  - offset: 16
+    value: 1869374770
+  stackable: false
+  unique: true
+pictureofthechampions:
+  entries:
+  - offset: 0
+    value: 1197831263
+  - offset: 8
+    value: 1417113167
+  - offset: 16
+    value: 1651138372
+  - offset: 24
+    value: 1279483725
+  - offset: 32
+    value: 1701670770
+  - offset: 40
+    value: 1767992400
+  - offset: 48
+    value: 1768125557
+  - offset: 56
+    value: 1919246145
+  - offset: 64
+    value: 1596993792
+  stackable: false
+  unique: true
+revalisgale:
+  entries:
+  - offset: 0
+    value: 1331849823
+  - offset: 8
+    value: 1214607983
+  - offset: 16
+    value: 1399813484
+  - offset: 24
+    value: 1599236468
+  - offset: 32
+    value: 1862270976
+  stackable: false
+  unique: true
+revalisgaleplus:
+  entries:
+  - offset: 0
+    value: 1331849823
+  - offset: 8
+    value: 1145848671
+  - offset: 16
+    value: 1214607983
+  - offset: 24
+    value: 1399813484
+  - offset: 32
+    value: 1599236468
+  - offset: 40
+    value: 1862270976
+  stackable: false
+  unique: true
+royalbridle:
+  entries:
+  - offset: 0
+    value: 1197567333
+  - offset: 8
+    value: 1383034184
+  - offset: 16
+    value: 1869771621
+  - offset: 24
+    value: 1382377838
+  - offset: 32
+    value: 1935618098
+  stackable: false
+  unique: true
+royalsaddle:
+  entries:
+  - offset: 0
+    value: 1197567333
+  - offset: 8
+    value: 1383034184
+  - offset: 16
+    value: 1869771621
+  - offset: 24
+    value: 1398891620
+  - offset: 32
+    value: 1818582832
+  - offset: 40
+    value: 838860800
+  stackable: false
+  unique: true
+rudaniasemblem:
+  entries:
+  - offset: 0
+    value: 1331849823
+  - offset: 8
+    value: 1145848671
+  - offset: 16
+    value: 1214607983
+  - offset: 24
+    value: 1399153004
+  - offset: 32
+    value: 1598517106
+  - offset: 40
+    value: 1869479936
+  stackable: true
+  unique: false
+rutasemblem:
+  entries:
+  - offset: 0
+    value: 1331849823
+  - offset: 8
+    value: 1145848671
+  - offset: 16
+    value: 1214607983
+  - offset: 24
+    value: 1399153004
+  - offset: 32
+    value: 1599762290
+  - offset: 40
+    value: 1627389952
+  stackable: true
+  unique: false
+sheikahslate:
+  entries:
+  - offset: 0
+    value: 1331849823
+  - offset: 8
+    value: 1146246004
+  - offset: 16
+    value: 1869505887
+  - offset: 24
+    value: 1197831168
+  stackable: false
+  unique: true
+spiritorb:
+  entries:
+  - offset: 0
+    value: 1331849823
+  - offset: 8
+    value: 1148546663
+  - offset: 16
+    value: 1701801539
+  - offset: 24
+    value: 1818583410
+  - offset: 32
+    value: 1399153004
+  stackable: true
+  unique: false
+thunderhelm:
+  entries:
+  - offset: 0
+    value: 1331849823
+  - offset: 8
+    value: 1098018159
+  - offset: 16
+    value: 1918841137
+  - offset: 24
+    value: 895436901
+  - offset: 32
+    value: 1633943552
+  stackable: false
+  unique: true
+travelerssaddle:
+  entries:
+  - offset: 0
+    value: 1197567333
+  - offset: 8
+    value: 1383034184
+  - offset: 16
+    value: 1869771621
+  - offset: 24
+    value: 1398891620
+  - offset: 32
+    value: 1818582832
+  - offset: 40
+    value: 822083584
+  stackable: false
+  unique: true
+travelerssbridle:
+  entries:
+  - offset: 0
+    value: 1197567333
+  - offset: 8
+    value: 1383034184
+  - offset: 16
+    value: 1869771621
+  - offset: 24
+    value: 1382377838
+  - offset: 32
+    value: 1935618097
+  stackable: false
+  unique: true
+travelmedallion:
+  entries:
+  - offset: 0
+    value: 1331849823
+  - offset: 8
+    value: 1466004080
+  - offset: 16
+    value: 1145848576
+  stackable: false
+  unique: true
+urbosasfury:
+  entries:
+  - offset: 0
+    value: 1331849823
+  - offset: 8
+    value: 1214607983
+  - offset: 16
+    value: 1399813484
+  - offset: 24
+    value: 1598514546
+  - offset: 32
+    value: 1969516288
+  stackable: false
+  unique: true
+urbosasfuryplus:
+  entries:
+  - offset: 0
+    value: 1331849823
+  - offset: 8
+    value: 1145848671
+  - offset: 16
+    value: 1214607983
+  - offset: 24
+    value: 1399813484
+  - offset: 32
+    value: 1598514546
+  - offset: 40
+    value: 1969516288
+  stackable: false
+  unique: true

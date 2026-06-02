@@ -1,0 +1,2088 @@
+applepie:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801406815
+  - offset: 24
+    value: 808583168
+  stackable: false
+bakedapple:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1599237985
+  - offset: 16
+    value: 1937006384
+  - offset: 24
+    value: 855638016
+  hearts: 0.75
+  stackable: true
+bakedfortifiedpumpkin:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1599237985
+  - offset: 16
+    value: 1937006385
+  - offset: 24
+    value: 889192448
+  hearts: 0.75
+  stackable: true
+bakedpalmfruit:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1599237985
+  - offset: 16
+    value: 1937006385
+  - offset: 24
+    value: 805306368
+  hearts: 1.5
+  stackable: true
+blackenedcrab:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1599237985
+  - offset: 16
+    value: 1937000041
+  - offset: 24
+    value: 1936219953
+  - offset: 32
+    value: 889192448
+  hearts: 1.5
+  stackable: true
+blueshellescargot:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1599237985
+  - offset: 16
+    value: 1937000041
+  - offset: 24
+    value: 1936219953
+  - offset: 32
+    value: 822083584
+  hearts: 4.5
+  stackable: true
+campfireegg:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1599237985
+  - offset: 16
+    value: 1937006389
+  - offset: 24
+    value: 822083584
+  hearts: 1.5
+  stackable: true
+carrotcake:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801406815
+  - offset: 24
+    value: 808779776
+  stackable: false
+carrotstew:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801407327
+  - offset: 24
+    value: 808976384
+  stackable: false
+charredpepper:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1599237985
+  - offset: 16
+    value: 1937006385
+  - offset: 24
+    value: 855638016
+  hearts: 0.75
+  stackable: true
+clamchowder:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801407327
+  - offset: 24
+    value: 808714240
+  stackable: false
+copiousfriedwildgreens:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801405023
+  - offset: 24
+    value: 825294848
+  stackable: false
+copiousmeatskewers:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801405023
+  - offset: 24
+    value: 825622528
+  stackable: false
+copiousmushroomskewers:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801405023
+  - offset: 24
+    value: 825425920
+  stackable: false
+copiousseafoodskewers:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801405023
+  - offset: 24
+    value: 825556992
+  stackable: false
+copioussimmeredfruit:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801405023
+  - offset: 24
+    value: 825360384
+  stackable: false
+crabomeletwithrice:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801406303
+  - offset: 24
+    value: 825622528
+  stackable: false
+crabrisotto:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801406303
+  - offset: 24
+    value: 825688064
+  stackable: false
+crabstirfry:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801405535
+  - offset: 24
+    value: 825229312
+  stackable: false
+creamofmushroomsoup:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801407327
+  - offset: 24
+    value: 808845312
+  stackable: false
+creamofvegetablesoup:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801407327
+  - offset: 24
+    value: 808910848
+  stackable: false
+creamyheartsoup:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801406047
+  - offset: 24
+    value: 808714240
+  stackable: false
+creamymeatsoup:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801406047
+  - offset: 24
+    value: 808517632
+  stackable: false
+creamyseafoodsoup:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801406047
+  - offset: 24
+    value: 808583168
+  stackable: false
+currypilaf:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801406303
+  - offset: 24
+    value: 825294848
+  stackable: false
+curryrice:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801407071
+  - offset: 24
+    value: 808517632
+  stackable: false
+dubiousfood:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801408351
+  - offset: 24
+    value: 808517632
+  stackable: false
+eggpudding:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801406815
+  - offset: 24
+    value: 825491456
+  stackable: false
+eggtart:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801406815
+  - offset: 24
+    value: 808648704
+  stackable: false
+elixir:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801405279
+  - offset: 24
+    value: 825688064
+  stackable: false
+elixirx:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801405279
+  - offset: 24
+    value: 825712432
+  - offset: 32
+    value: 805306368
+  stackable: false
+fairytonic:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801405279
+  - offset: 24
+    value: 825622528
+  stackable: false
+fishandmushroomskewer:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801404767
+  - offset: 24
+    value: 808976384
+  stackable: false
+fishpie:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801406815
+  - offset: 24
+    value: 825556992
+  stackable: false
+fishskewer:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801405023
+  - offset: 24
+    value: 808779776
+  stackable: false
+fragrantmushroomsaute:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801408607
+  - offset: 24
+    value: 808517632
+  stackable: false
+friedbananas:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801406815
+  - offset: 24
+    value: 825425920
+  stackable: false
+friedeggandrice:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801405791
+  - offset: 24
+    value: 808714240
+  stackable: false
+friedwildgreens:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801405023
+  - offset: 24
+    value: 808517632
+  stackable: false
+frozenbass:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598253161
+  - offset: 16
+    value: 1819043172
+  - offset: 24
+    value: 1181315944
+  - offset: 32
+    value: 1596993792
+  hearts: 2
+  stackable: true
+frozenbirddrumstick:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598253161
+  - offset: 16
+    value: 1819043172
+  - offset: 24
+    value: 1596994560
+  hearts: 1
+  stackable: true
+frozenbirdthigh:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598253161
+  - offset: 16
+    value: 1819043172
+  - offset: 24
+    value: 1596994816
+  hearts: 1
+  stackable: true
+frozencarp:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598253161
+  - offset: 16
+    value: 1819043172
+  - offset: 24
+    value: 1181315944
+  - offset: 32
+    value: 1596994560
+  hearts: 1
+  stackable: true
+frozencrab:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598253161
+  - offset: 16
+    value: 1819043172
+  - offset: 24
+    value: 1181315944
+  - offset: 32
+    value: 1596995328
+  hearts: 2
+  stackable: true
+frozenheartybass:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598253161
+  - offset: 16
+    value: 1819043172
+  - offset: 24
+    value: 1181315944
+  - offset: 32
+    value: 1596995072
+  hearts: 2
+  stackable: true
+frozenheartysalmon:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598253161
+  - offset: 16
+    value: 1819043172
+  - offset: 24
+    value: 1181315944
+  - offset: 32
+    value: 1596994048
+  hearts: 4
+  stackable: true
+frozenporgy:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598253161
+  - offset: 16
+    value: 1819043172
+  - offset: 24
+    value: 1181315944
+  - offset: 32
+    value: 1596994816
+  hearts: 1
+  stackable: true
+frozenriversnail:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598253161
+  - offset: 16
+    value: 1819043172
+  - offset: 24
+    value: 1181315944
+  - offset: 32
+    value: 1596995584
+  hearts: 1
+  stackable: true
+frozentrout:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598253161
+  - offset: 16
+    value: 1819043172
+  - offset: 24
+    value: 1181315944
+  - offset: 32
+    value: 1596994304
+  hearts: 1
+  stackable: true
+frozenwholebird:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598253161
+  - offset: 16
+    value: 1819043172
+  - offset: 24
+    value: 1596995072
+  hearts: 3
+  stackable: true
+fruitandmushroommix:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801404767
+  - offset: 24
+    value: 808910848
+  stackable: false
+fruitcake:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801408095
+  - offset: 24
+    value: 808583168
+  stackable: false
+fruitpie:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801406815
+  - offset: 24
+    value: 808517632
+  stackable: false
+glazedmeat:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801404767
+  - offset: 24
+    value: 825360384
+  stackable: false
+glazedmushrooms:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801404767
+  - offset: 24
+    value: 825294848
+  stackable: false
+glazedseafood:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801404767
+  - offset: 24
+    value: 825425920
+  stackable: false
+glazedveggies:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801404767
+  - offset: 24
+    value: 825491456
+  stackable: false
+gourmetmeatandricebowl:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801406303
+  - offset: 24
+    value: 809041920
+  stackable: false
+gourmetmeatandseafoodfry:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801405023
+  - offset: 24
+    value: 825819136
+  stackable: false
+gourmetmeatcurry:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801407071
+  - offset: 24
+    value: 809041920
+  stackable: false
+gourmetmeatstew:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801407327
+  - offset: 24
+    value: 808779776
+  stackable: false
+gourmetpoultrycurry:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801407071
+  - offset: 24
+    value: 808976384
+  stackable: false
+gourmetpoultrypilaf:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801405791
+  - offset: 24
+    value: 808648704
+  stackable: false
+gourmetspicedmeatskewers:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801408607
+  - offset: 24
+    value: 808779776
+  stackable: false
+hardboiledegg:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598189417
+  - offset: 16
+    value: 1818584159
+  - offset: 24
+    value: 808517632
+herbsaute:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801408607
+  - offset: 24
+    value: 808583168
+  stackable: false
+honeycandy:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801406815
+  - offset: 24
+    value: 825622528
+  stackable: false
+honeycrepe:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801406815
+  - offset: 24
+    value: 825688064
+  stackable: false
+honeyedapple:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801406815
+  - offset: 24
+    value: 808976384
+  stackable: false
+honeyedfruits:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801406815
+  - offset: 24
+    value: 809041920
+  stackable: false
+hotbutteredapple:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801406815
+  - offset: 24
+    value: 808910848
+  stackable: false
+icygourmetmeat:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598253161
+  - offset: 16
+    value: 1819043172
+  - offset: 24
+    value: 1596994304
+  hearts: 3
+  stackable: true
+icyheartyblueshellsnail:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598253161
+  - offset: 16
+    value: 1819043172
+  - offset: 24
+    value: 1181315944
+  - offset: 32
+    value: 1596995840
+  hearts: 3
+  stackable: true
+icymeat:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598253161
+  - offset: 16
+    value: 1819043172
+  - offset: 24
+    value: 1596993792
+  hearts: 1
+  stackable: true
+icyprimemeat:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598253161
+  - offset: 16
+    value: 1819043172
+  - offset: 24
+    value: 1596994048
+  hearts: 1.5
+  stackable: true
+meatandmushroomskewer:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801404767
+  - offset: 24
+    value: 809041920
+  stackable: false
+meatandricebowl:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801406303
+  - offset: 24
+    value: 808779776
+  stackable: false
+meatandseafoodfry:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801405023
+  - offset: 24
+    value: 825688064
+  stackable: false
+meatcurry:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801407071
+  - offset: 24
+    value: 808845312
+  stackable: false
+meatpie:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801406815
+  - offset: 24
+    value: 808714240
+  stackable: false
+meatskewer:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801405023
+  - offset: 24
+    value: 808845312
+  stackable: false
+meatstew:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801407327
+  - offset: 24
+    value: 808517632
+  stackable: false
+meatstuffedpumpkin:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801405023
+  - offset: 24
+    value: 842006528
+  stackable: false
+meatyriceballs:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801406303
+  - offset: 24
+    value: 825556992
+  stackable: false
+milk:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801407327
+  - offset: 24
+    value: 809041920
+  stackable: false
+monstercake:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801407583
+  - offset: 24
+    value: 808648704
+  stackable: false
+monstercurry:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801407583
+  - offset: 24
+    value: 808779776
+  stackable: false
+monsterriceballs:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801407583
+  - offset: 24
+    value: 808714240
+  stackable: false
+monstersoup:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801407583
+  - offset: 24
+    value: 808583168
+  stackable: false
+monsterstew:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801407583
+  - offset: 24
+    value: 808517632
+  stackable: false
+mushroomomelet:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801408095
+  - offset: 24
+    value: 808714240
+  stackable: false
+mushroomriceballs:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801406303
+  - offset: 24
+    value: 808714240
+  stackable: false
+mushroomrisotto:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801406303
+  - offset: 24
+    value: 825360384
+  stackable: false
+mushroomskewer:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801404767
+  - offset: 24
+    value: 808517632
+  stackable: false
+nutcake:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801406815
+  - offset: 24
+    value: 825360384
+  stackable: false
+omelet:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801404767
+  - offset: 24
+    value: 825229312
+  stackable: false
+pepperseafood:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801405535
+  - offset: 24
+    value: 808976384
+  stackable: false
+peppersteak:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801405535
+  - offset: 24
+    value: 808910848
+  stackable: false
+plaincrepe:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801406815
+  - offset: 24
+    value: 825229312
+  stackable: false
+porgymeuniere:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801406559
+  - offset: 24
+    value: 808583168
+  stackable: false
+poultrycurry:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801407071
+  - offset: 24
+    value: 808714240
+  stackable: false
+poultrypilaf:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801405791
+  - offset: 24
+    value: 808517632
+  stackable: false
+primemeatandricebowl:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801406303
+  - offset: 24
+    value: 808845312
+  stackable: false
+primemeatandseafoodfry:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801405023
+  - offset: 24
+    value: 825753600
+  stackable: false
+primemeatcurry:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801407071
+  - offset: 24
+    value: 808910848
+  stackable: false
+primemeatstew:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801407327
+  - offset: 24
+    value: 808583168
+  stackable: false
+primepoultrycurry:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801407071
+  - offset: 24
+    value: 808779776
+  stackable: false
+primepoultrypilaf:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801405791
+  - offset: 24
+    value: 808583168
+  stackable: false
+primespicedmeatskewer:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801408607
+  - offset: 24
+    value: 808714240
+  stackable: false
+pumpkinpie:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801406815
+  - offset: 24
+    value: 808845312
+  stackable: false
+pumpkinstew:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801407327
+  - offset: 24
+    value: 808648704
+  stackable: false
+roastedacorn:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1599237985
+  - offset: 16
+    value: 1937006388
+  - offset: 24
+    value: 939524096
+  hearts: 0.5
+  stackable: true
+roastedarmoranth:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1599237985
+  - offset: 16
+    value: 1937006386
+  - offset: 24
+    value: 939524096
+  hearts: 0.5
+  stackable: true
+roastedbass:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1599237985
+  - offset: 16
+    value: 1937000041
+  - offset: 24
+    value: 1936219952
+  - offset: 32
+    value: 822083584
+  hearts: 1.5
+  stackable: true
+roastedbigradish:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1599237985
+  - offset: 16
+    value: 1937006385
+  - offset: 24
+    value: 956301312
+  hearts: 6
+  stackable: true
+roastedbirddrumstick:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1599237985
+  - offset: 16
+    value: 1937006384
+  - offset: 24
+    value: 838860800
+  hearts: 1.5
+  stackable: true
+roastedbirdthigh:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1599237985
+  - offset: 16
+    value: 1937006388
+  - offset: 24
+    value: 822083584
+  hearts: 2.25
+  stackable: true
+roastedcarp:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1599237985
+  - offset: 16
+    value: 1937000041
+  - offset: 24
+    value: 1936219952
+  - offset: 32
+    value: 922746880
+  hearts: 1.5
+  stackable: true
+roastedenduracarrot:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1599237985
+  - offset: 16
+    value: 1937006389
+  - offset: 24
+    value: 805306368
+  hearts: 3
+  stackable: true
+roastedheartybass:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1599237985
+  - offset: 16
+    value: 1937000041
+  - offset: 24
+    value: 1936219952
+  - offset: 32
+    value: 838860800
+  hearts: 3
+  stackable: true
+roastedheartydurian:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1599237985
+  - offset: 16
+    value: 1937006384
+  - offset: 24
+    value: 956301312
+  hearts: 4.5
+  stackable: true
+roastedheartysalmon:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1599237985
+  - offset: 16
+    value: 1937000041
+  - offset: 24
+    value: 1936219952
+  - offset: 32
+    value: 872415232
+  hearts: 4.5
+  stackable: true
+roastedhydromelon:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1599237985
+  - offset: 16
+    value: 1937006385
+  - offset: 24
+    value: 838860800
+  hearts: 0.75
+  stackable: true
+roastedlotusseeds:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1599237985
+  - offset: 16
+    value: 1937006385
+  - offset: 24
+    value: 905969664
+  hearts: 0.75
+  stackable: true
+roastedmightybananas:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1599237985
+  - offset: 16
+    value: 1937006385
+  - offset: 24
+    value: 822083584
+  hearts: 0.75
+  stackable: true
+roastedmightythistle:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1599237985
+  - offset: 16
+    value: 1937006386
+  - offset: 24
+    value: 922746880
+  hearts: 0.5
+  stackable: true
+roastedporgy:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1599237985
+  - offset: 16
+    value: 1937000041
+  - offset: 24
+    value: 1936219952
+  - offset: 32
+    value: 956301312
+  hearts: 1.5
+  stackable: true
+roastedradish:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1599237985
+  - offset: 16
+    value: 1937006385
+  - offset: 24
+    value: 939524096
+  hearts: 3.75
+  stackable: true
+roastedswiftcarrot:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1599237985
+  - offset: 16
+    value: 1937006386
+  - offset: 24
+    value: 872415232
+  hearts: 0.75
+  stackable: true
+roastedtreenut:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1599237985
+  - offset: 16
+    value: 1937006389
+  - offset: 24
+    value: 838860800
+  hearts: 0.5
+  stackable: true
+roastedtrout:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1599237985
+  - offset: 16
+    value: 1937000041
+  - offset: 24
+    value: 1936219952
+  - offset: 32
+    value: 855638016
+  hearts: 1.5
+  stackable: true
+roastedvoltfruit:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1599237985
+  - offset: 16
+    value: 1937006384
+  - offset: 24
+    value: 939524096
+  hearts: 0.75
+  stackable: true
+roastedwholebird:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1599237985
+  - offset: 16
+    value: 1937006388
+  - offset: 24
+    value: 905969664
+  hearts: 4.5
+  stackable: true
+roastedwildberry:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1599237985
+  - offset: 16
+    value: 1937006384
+  - offset: 24
+    value: 922746880
+  hearts: 0.75
+  stackable: true
+rockhardfood:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801404767
+  - offset: 24
+    value: 808910848
+salmonmeuniere:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801406559
+  - offset: 24
+    value: 808648704
+  stackable: false
+salmonrisotto:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801406303
+  - offset: 24
+    value: 825491456
+  stackable: false
+saltgrilledcrab:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801405535
+  - offset: 24
+    value: 809041920
+  stackable: false
+saltgrilledfish:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801405535
+  - offset: 24
+    value: 808648704
+  stackable: false
+saltgrilledgourmetmeat:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801405535
+  - offset: 24
+    value: 808845312
+  stackable: false
+saltgrilledgreens:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801405535
+  - offset: 24
+    value: 808583168
+  stackable: false
+saltgrilledmeat:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801405535
+  - offset: 24
+    value: 808714240
+  stackable: false
+saltgrilledmushrooms:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801405535
+  - offset: 24
+    value: 808517632
+  stackable: false
+saltgrilledprimemeat:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801405535
+  - offset: 24
+    value: 808779776
+  stackable: false
+sauteednuts:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801405023
+  - offset: 24
+    value: 842137600
+  stackable: false
+sauteedpeppers:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801405023
+  - offset: 24
+    value: 842072064
+  stackable: false
+seafoodcurry:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801407071
+  - offset: 24
+    value: 808648704
+  stackable: false
+seafoodfriedrice:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801406303
+  - offset: 24
+    value: 825229312
+  stackable: false
+seafoodmeuniere:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801406559
+  - offset: 24
+    value: 808517632
+  stackable: false
+seafoodpaella:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801408095
+  - offset: 24
+    value: 808517632
+  stackable: false
+seafoodriceballs:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801406303
+  - offset: 24
+    value: 808583168
+  stackable: false
+seafoodskewer:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801405023
+  - offset: 24
+    value: 842203136
+  stackable: false
+searedgourmetsteak:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1599237985
+  - offset: 16
+    value: 1937006388
+  - offset: 24
+    value: 889192448
+  hearts: 4.5
+  stackable: true
+searedprimesteak:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1599237985
+  - offset: 16
+    value: 1937006388
+  - offset: 24
+    value: 805306368
+  hearts: 2.25
+  stackable: true
+searedsteak:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1599237985
+  - offset: 16
+    value: 1937006384
+  - offset: 24
+    value: 822083584
+  hearts: 1.5
+  stackable: true
+simmeredfruit:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801405023
+  - offset: 24
+    value: 808583168
+  stackable: false
+sneakyriverescargot:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1599237985
+  - offset: 16
+    value: 1937000041
+  - offset: 24
+    value: 1936219953
+  - offset: 32
+    value: 855638016
+  hearts: 1.5
+  stackable: true
+spicedmeatskewer:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801408607
+  - offset: 24
+    value: 808648704
+  stackable: false
+steamedfish:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801404767
+  - offset: 24
+    value: 808714240
+  stackable: false
+steamedfruit:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801404767
+  - offset: 24
+    value: 808648704
+  stackable: false
+steamedmeat:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801404767
+  - offset: 24
+    value: 808779776
+  stackable: false
+steamedmushrooms:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801404767
+  - offset: 24
+    value: 808583168
+  stackable: false
+toastedbigheartytruffle:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1599237985
+  - offset: 16
+    value: 1937006388
+  - offset: 24
+    value: 956301312
+  hearts: 4.5
+  stackable: true
+toastedheartytruffle:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1599237985
+  - offset: 16
+    value: 1937006384
+  - offset: 24
+    value: 889192448
+  hearts: 3
+  stackable: true
+toastychillshroom:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1599237985
+  - offset: 16
+    value: 1937006387
+  - offset: 24
+    value: 822083584
+  hearts: 0.75
+  stackable: true
+toastyendurashroom:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1599237985
+  - offset: 16
+    value: 1937006389
+  - offset: 24
+    value: 855638016
+  hearts: 1.5
+  stackable: true
+toastyhylianshroom:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1599237985
+  - offset: 16
+    value: 1937006384
+  - offset: 24
+    value: 905969664
+  hearts: 1.5
+  stackable: true
+toastyironshroom:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1599237985
+  - offset: 16
+    value: 1937006387
+  - offset: 24
+    value: 939524096
+  hearts: 0.75
+  stackable: true
+toastyrazorshroom:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1599237985
+  - offset: 16
+    value: 1937006387
+  - offset: 24
+    value: 922746880
+  hearts: 0.75
+  stackable: true
+toastyrushroom:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1599237985
+  - offset: 16
+    value: 1937006387
+  - offset: 24
+    value: 905969664
+  hearts: 0.75
+  stackable: true
+toastysilentshroom:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1599237985
+  - offset: 16
+    value: 1937006387
+  - offset: 24
+    value: 956301312
+  hearts: 0.75
+  stackable: true
+toastystamellashroom:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1599237985
+  - offset: 16
+    value: 1937006384
+  - offset: 24
+    value: 872415232
+  hearts: 1.5
+  stackable: true
+toastysunshroom:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1599237985
+  - offset: 16
+    value: 1937006387
+  - offset: 24
+    value: 838860800
+  hearts: 0.75
+  stackable: true
+toastyzapshroom:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1599237985
+  - offset: 16
+    value: 1937006387
+  - offset: 24
+    value: 855638016
+  hearts: 0.75
+  stackable: true
+vegetablecurry:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801407071
+  - offset: 24
+    value: 808583168
+  stackable: false
+vegetableomelet:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801408095
+  - offset: 24
+    value: 808648704
+  stackable: false
+vegetablerisotto:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801406303
+  - offset: 24
+    value: 825425920
+  stackable: false
+veggiecreamsoup:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801406047
+  - offset: 24
+    value: 808648704
+  stackable: false
+veggiericeballs:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801406303
+  - offset: 24
+    value: 808648704
+  stackable: false
+wheatbread:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801407839
+  - offset: 24
+    value: 808517632
+  stackable: false
+wildberrycrepe:
+  entries:
+  - offset: 0
+    value: 1232364909
+  - offset: 8
+    value: 1598254959
+  - offset: 16
+    value: 1801406815
+  - offset: 24
+    value: 825294848
+  stackable: false

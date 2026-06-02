@@ -185,9 +185,9 @@ class SaveFile:
         elif entry.value == "integer":
             return bf.read_uint32(entry.offset)
         elif entry.value == "ascii":
-            return bf.read_ascii(entry.offset, 32)
+            return bf.read_ascii(entry.offset, entry.length or 32)
         elif entry.value == "utf8":
-            return bf.read_utf8(entry.offset, 64)
+            return bf.read_utf8(entry.offset, entry.length or 64)
         else:
             return bf.read_uint32(entry.offset)
 
@@ -219,9 +219,9 @@ class SaveFile:
             elif entry.value == "integer":
                 bf.write_uint32(entry.offset, int(value))
             elif entry.value == "ascii":
-                bf.write_ascii(entry.offset, str(value), 32)
+                bf.write_ascii(entry.offset, str(value), entry.length or 32)
             elif entry.value == "utf8":
-                bf.write_utf8(entry.offset, str(value), 64)
+                bf.write_utf8(entry.offset, str(value), entry.length or 64)
             else:
                 bf.write_uint32(entry.offset, int(value))
 
@@ -404,17 +404,11 @@ class SaveFile:
         def _horse(key: str, h: HorseData | None) -> None:
             if h is None:
                 return
-            for attr, flag in [
-                ("name", f"horses.{key}.name"),
-                ("type", f"horses.{key}.type"),
-                ("saddle", f"horses.{key}.saddle"),
-                ("reins", f"horses.{key}.reins"),
-                ("mane", f"horses.{key}.mane"),
-                ("color", f"horses.{key}.color"),
-            ]:
-                val = getattr(h, attr)
-                if val is not None:
-                    self.set_flag(f"{flag}={val}", True, unsafe=True)
+            # color and bond are plain integer/float — safe to round-trip.
+            # name/type/saddle/reins/mane use a stride-8 packed ASCII format
+            # we don't yet encode; skip them on write to avoid corrupting those offsets.
+            if h.color is not None:
+                self.set_flag(f"horses.{key}.color", h.color, unsafe=True)
             if h.bond is not None:
                 self.set_flag(f"horses.{key}.bond", h.bond / 100.0, unsafe=True)
 

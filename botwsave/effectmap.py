@@ -33,6 +33,7 @@ class Entry:
     offset: int
     value: bool | int | float | str  # True/False = boolean; str = 'float'/'integer'/'ascii'/'utf8'
     unit: str | None = None
+    length: int | None = None  # byte length for ascii/utf8 string entries
 
 
 @dataclass
@@ -91,6 +92,7 @@ class EffectMap:
                 offset=e["offset"],
                 value=e["value"],
                 unit=e.get("unit"),
+                length=e.get("length"),
             )
             for e in raw["entries"]
         ]

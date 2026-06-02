@@ -8,6 +8,7 @@ mapfiles/offsetmap.json
 export
 *.txt
 *.test.sav
+config.yaml
 botwsave/__pycache__/
 botw_mapper/
 *.egg-info/
